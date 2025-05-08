@@ -21,7 +21,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential wget gcc g++ libc6-dev libstdc++-13-dev
+          sudo apt-get install -y build-essential wget gcc g++ libc6-dev libstdc++-13-dev gcc-13 g++-13
           wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
           tar -xzf ta-lib-0.4.0-src.tar.gz
           cd ta-lib/
@@ -32,16 +32,18 @@ jobs:
           rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
           sudo ldconfig
           export LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:$LD_LIBRARY_PATH
-          export C_INCLUDE_PATH=/usr/include:/usr/local/include:/usr/include/x86_64-linux-gnu:$C_INCLUDE_PATH
-          export CPLUS_INCLUDE_PATH=/usr/include:/usr/local/include:/usr/include/x86_64-linux-gnu:$CPLUS_INCLUDE_PATH
+          export C_INCLUDE_PATH=/usr/include:/usr/local/include:/usr/include/x86_64-linux-gnu:/usr/lib/gcc/x86_64-linux-gnu/13/include:$C_INCLUDE_PATH
+          export CPLUS_INCLUDE_PATH=/usr/include:/usr/local/include:/usr/include/x86_64-linux-gnu:/usr/lib/gcc/x86_64-linux-gnu/13/include:/usr/include/c++/13:$CPLUS_INCLUDE_PATH
           export LIBRARY_PATH=/usr/lib:/usr/local/lib:$LIBRARY_PATH
+          export CPATH=/usr/include:/usr/local/include:/usr/include/x86_64-linux-gnu:/usr/lib/gcc/x86_64-linux-gnu/13/include:/usr/include/c++/13:$CPATH
       
       - name: Install dependencies
         env:
           LD_LIBRARY_PATH: /usr/lib:/usr/local/lib:$LD_LIBRARY_PATH
-          C_INCLUDE_PATH: /usr/include:/usr/local/include:/usr/include/x86_64-linux-gnu:$C_INCLUDE_PATH
-          CPLUS_INCLUDE_PATH: /usr/include:/usr/local/include:/usr/include/x86_64-linux-gnu:$CPLUS_INCLUDE_PATH
+          C_INCLUDE_PATH: /usr/include:/usr/local/include:/usr/include/x86_64-linux-gnu:/usr/lib/gcc/x86_64-linux-gnu/13/include:$C_INCLUDE_PATH
+          CPLUS_INCLUDE_PATH: /usr/include:/usr/local/include:/usr/include/x86_64-linux-gnu:/usr/lib/gcc/x86_64-linux-gnu/13/include:/usr/include/c++/13:$CPLUS_INCLUDE_PATH
           LIBRARY_PATH: /usr/lib:/usr/local/lib:$LIBRARY_PATH
+          CPATH: /usr/include:/usr/local/include:/usr/include/x86_64-linux-gnu:/usr/lib/gcc/x86_64-linux-gnu/13/include:/usr/include/c++/13:$CPATH
         run: |
           python -m pip install --upgrade pip
           pip install numpy==1.24.3
