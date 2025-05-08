@@ -1,0 +1,45 @@
+2025-04-25 20:02:29 [INFO] MainProcess - [36mℹ️ 로깅 설정 완료[0m
+2025-04-25 20:02:29 [INFO] MainProcess - [36mℹ️ ℹ️ 백테스트 시작[0m
+2025-04-25 20:02:29 [INFO] MainProcess - [36mℹ️ 대상 티커: KRW-BTC, KRW-ETH, KRW-XRP, KRW-SOL, KRW-ADA, KRW-DOGE[0m
+2025-04-25 20:02:29 [INFO] MainProcess - [36mℹ️ 테스트 기간: 60일 (2024-10-31 ~ 2024-12-30)[0m
+2025-04-25 20:02:29 [INFO] MainProcess - [36mℹ️ 
+🏛️ KRW-BTC 분석 시작[0m
+2025-04-25 20:02:29 [INFO] MainProcess - [36mℹ️ 📊 KRW-BTC 데이터 로드 중...[0m
+2025-04-25 20:02:29 [INFO] MainProcess - [36mℹ️ 📊 KRW-BTC 데이터 로드 시작...[0m
+2025-04-25 20:02:29 [INFO] MainProcess - [36mℹ️ 📊 요청 기간: 2024-10-31 ~ 2024-12-30[0m
+2025-04-25 20:02:29 [INFO] MainProcess - [36mℹ️ 🔄 KRW-BTC: 2024-10 데이터 수집 시작[0m
+2025-04-25 20:02:52 [INFO] MainProcess - [36mℹ️ 💾 KRW-BTC: 2024-10 캐시 저장 완료[0m
+2025-04-25 20:02:52 [INFO] MainProcess - [36mℹ️ 🔄 KRW-BTC: 2024-11 데이터 수집 시작[0m
+2025-04-25 20:03:14 [INFO] MainProcess - [36mℹ️ 💾 KRW-BTC: 2024-11 캐시 저장 완료[0m
+2025-04-25 20:03:14 [INFO] MainProcess - [36mℹ️ 🔄 KRW-BTC: 2024-12 데이터 수집 시작[0m
+2025-04-25 20:03:36 [INFO] MainProcess - [36mℹ️ 💾 KRW-BTC: 2024-12 캐시 저장 완료[0m
+2025-04-25 20:03:36 [INFO] MainProcess - [36mℹ️ ✅ KRW-BTC 전체 데이터 로드 완료 (총 17062 개)[0m
+2025-04-25 20:03:36 [INFO] MainProcess - [36mℹ️ ✅ KRW-BTC 데이터 로드 완료 (총 17062 개)[0m
+2025-04-25 20:04:34 [WARNING] MainProcess - [33m⚠️ ⚠️ KRW-BTC: 거래 기록 없음[0m
+2025-04-25 20:04:34 [INFO] MainProcess - [36mℹ️ 
+🏛️ KRW-ETH 분석 시작[0m
+2025-04-25 20:04:34 [INFO] MainProcess - [36mℹ️ 📊 KRW-ETH 데이터 로드 중...[0m
+2025-04-25 20:04:34 [INFO] MainProcess - [36mℹ️ 📊 KRW-ETH 데이터 로드 시작...[0m
+2025-04-25 20:04:34 [INFO] MainProcess - [36mℹ️ 📊 요청 기간: 2024-10-31 ~ 2024-12-30[0m
+2025-04-25 20:04:34 [INFO] MainProcess - [36mℹ️ 🔄 KRW-ETH: 2024-10 데이터 수집 시작[0m
+2025-04-25 20:04:57 [INFO] MainProcess - [36mℹ️ 💾 KRW-ETH: 2024-10 캐시 저장 완료[0m
+2025-04-25 20:04:57 [INFO] MainProcess - [36mℹ️ 🔄 KRW-ETH: 2024-11 데이터 수집 시작[0m
+2025-04-25 20:05:19 [INFO] MainProcess - [36mℹ️ 💾 KRW-ETH: 2024-11 캐시 저장 완료[0m
+2025-04-25 20:05:19 [INFO] MainProcess - [36mℹ️ 🔄 KRW-ETH: 2024-12 데이터 수집 시작[0m
+2025-04-25 20:05:41 [INFO] MainProcess - [36mℹ️ 💾 KRW-ETH: 2024-12 캐시 저장 완료[0m
+2025-04-25 20:05:41 [INFO] MainProcess - [36mℹ️ ✅ KRW-ETH 전체 데이터 로드 완료 (총 17062 개)[0m
+2025-04-25 20:05:41 [INFO] MainProcess - [36mℹ️ ✅ KRW-ETH 데이터 로드 완료 (총 17062 개)[0m
+2025-04-25 20:06:39 [WARNING] MainProcess - [33m⚠️ ⚠️ KRW-ETH: 거래 기록 없음[0m
+2025-04-25 20:06:39 [INFO] MainProcess - [36mℹ️ 
+🏛️ KRW-XRP 분석 시작[0m
+2025-04-25 20:06:39 [INFO] MainProcess - [36mℹ️ 📊 KRW-XRP 데이터 로드 중...[0m
+2025-04-25 20:06:39 [INFO] MainProcess - [36mℹ️ 📊 KRW-XRP 데이터 로드 시작...[0m
+2025-04-25 20:06:39 [INFO] MainProcess - [36mℹ️ 📊 요청 기간: 2024-10-31 ~ 2024-12-30[0m
+2025-04-25 20:06:39 [INFO] MainProcess - [36mℹ️ 🔄 KRW-XRP: 2024-10 데이터 수집 시작[0m
+2025-04-25 20:07:01 [INFO] MainProcess - [36mℹ️ 💾 KRW-XRP: 2024-10 캐시 저장 완료[0m
+2025-04-25 20:07:01 [INFO] MainProcess - [36mℹ️ 🔄 KRW-XRP: 2024-11 데이터 수집 시작[0m
+2025-04-25 20:07:23 [INFO] MainProcess - [36mℹ️ 💾 KRW-XRP: 2024-11 캐시 저장 완료[0m
+2025-04-25 20:07:23 [INFO] MainProcess - [36mℹ️ 🔄 KRW-XRP: 2024-12 데이터 수집 시작[0m
+2025-04-25 20:07:46 [INFO] MainProcess - [36mℹ️ 💾 KRW-XRP: 2024-12 캐시 저장 완료[0m
+2025-04-25 20:07:46 [INFO] MainProcess - [36mℹ️ ✅ KRW-XRP 전체 데이터 로드 완료 (총 17062 개)[0m
+2025-04-25 20:07:46 [INFO] MainProcess - [36mℹ️ ✅ KRW-XRP 데이터 로드 완료 (총 17062 개)[0m
