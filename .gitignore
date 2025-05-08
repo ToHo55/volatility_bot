@@ -1,0 +1,27 @@
+# 캐시 파일
+cache/
+*.zip
+
+# 로그 파일
+*.log
+logs/
+
+# 임시 파일
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 환경 설정
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE 설정
+.vscode/
+.idea/
+
+# 기타
+.DS_Store
+Thumbs.db 
