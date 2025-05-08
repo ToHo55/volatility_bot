@@ -11,10 +11,14 @@ RUN apt-get update && apt-get install -y \
 
 # 필요한 Python 패키지 설치
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+    pytest \
+    pytest-cov \
+    pytest-mock
 
 # 소스 코드 복사
 COPY src/ ./src/
+COPY tests/ ./tests/
 COPY config/ ./config/
 
 # 로그 디렉토리 생성
@@ -23,6 +27,11 @@ RUN mkdir -p logs
 # 환경 변수 설정
 ENV PYTHONPATH=/app
 ENV TZ=Asia/Seoul
+ENV TESTING=true
+
+# 테스트 실행을 위한 스크립트 추가
+COPY run_tests.sh .
+RUN chmod +x run_tests.sh
 
 # 실행 명령
-CMD ["python", "src/main.py"] 
+CMD ["./run_tests.sh"] 
