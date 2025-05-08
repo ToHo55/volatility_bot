@@ -6,7 +6,7 @@ pytest-cov==4.1.0
 pytest-mock==3.11.1
 python-binance==1.0.19
 python-dotenv==1.0.0
-requests==2.31.0
+requests==2.32.2
 ta-lib==0.4.28
 pyupbit>=0.2.33
 loguru==0.7.2
@@ -15,3 +15,6 @@ httpx>=0.24.1
 python-telegram-bot>=20.4
 cryptography>=41.0.3
 yfinance==0.2.36 
+aiohttp>=3.10.11 # not directly required, pinned by Snyk to avoid a vulnerability
+urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
