@@ -44,10 +44,12 @@ jobs:
           CPLUS_INCLUDE_PATH: /usr/include:/usr/local/include:/usr/include/x86_64-linux-gnu:/usr/lib/gcc/x86_64-linux-gnu/13/include:/usr/include/c++/13:$CPLUS_INCLUDE_PATH
           LIBRARY_PATH: /usr/lib:/usr/local/lib:$LIBRARY_PATH
           CPATH: /usr/include:/usr/local/include:/usr/include/x86_64-linux-gnu:/usr/lib/gcc/x86_64-linux-gnu/13/include:/usr/include/c++/13:$CPATH
+          PIP_NO_CACHE_DIR: "true"
+          PIP_DISABLE_PIP_VERSION_CHECK: "true"
         run: |
           python -m pip install --upgrade pip
-          pip install numpy==1.24.3
           pip install --no-binary :all: ta-lib==0.4.24
+          pip install numpy==1.26.4
           pip install -r requirements.txt
       
       - name: Run tests
