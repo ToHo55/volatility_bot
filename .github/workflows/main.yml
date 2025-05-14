@@ -26,7 +26,7 @@ jobs:
           tar -xzf ta-lib-0.4.0-src.tar.gz
           cd ta-lib
           ./configure --prefix=/usr
-          make -j$(nproc)
+          make -j$(nproc) src/lib/libta_lib.la
           sudo make install
       
       - name: Install Python dependencies
