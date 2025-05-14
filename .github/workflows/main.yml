@@ -31,8 +31,8 @@ jobs:
           ./configure --prefix=/usr \
               --disable-tools --disable-examples --disable-samples
 
-          make -C src -j1 libta_lib.la
-          sudo make -C src install
+          make -j1
+          sudo make install
       
       - name: Install Python dependencies
         run: |
