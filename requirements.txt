@@ -1,5 +1,5 @@
 numpy==1.24.3
-pandas==2.0.3
+pandas==1.5.3
 pandas-ta==0.3.14b0
 pytest==7.4.0
 pytest-cov==4.1.0
@@ -7,7 +7,7 @@ pytest-mock==3.11.1
 python-binance==1.0.19
 python-dotenv==1.0.0
 requests==2.31.0
-ta-lib==0.4.28
+ta-lib==0.6.3
 pyupbit>=0.2.33
 loguru==0.7.2
 rich==13.7.0
