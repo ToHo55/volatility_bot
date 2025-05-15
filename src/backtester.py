@@ -60,67 +60,74 @@ class Backtester:
         거래 시뮬레이션
         
         Args:
-            df (pd.DataFrame): 신호가 포함된 데이터
+            df (pd.DataFrame): OHLCV 데이터
             
         Returns:
-            pd.DataFrame: 거래 결과가 추가된 데이터
+            pd.DataFrame: 시뮬레이션 결과
         """
         try:
             # 초기 설정
-            df['position'] = 0  # 포지션 (1: 롱, -1: 숏, 0: 중립)
-            df['stop_price'] = np.nan  # 손절가
-            df['stop_loss'] = np.nan  # 손절 여부
-            df['pnl'] = 0.0  # 수익/손실
-            df['equity'] = self.initial_capital  # 자본금
+            position = 0  # 0: 중립, 1: 롱, -1: 숏
+            entry_price = 0
+            stop_price = 0
+            pnl = 0
+            equity = self.initial_capital
             
-            position = 0
-            entry_price = 0.0
-            stop_price = 0.0
+            # 결과 저장용 컬럼 추가
+            df['position'] = 0
+            df['stop_price'] = np.nan
+            df['stop_hit'] = False
+            df['stop_loss'] = False
+            df['pnl'] = 0.0
+            df['equity'] = self.initial_capital
             
-            for i in range(1, len(df)):
-                # 이전 포지션 유지
-                df.loc[df.index[i], 'position'] = position
-                df.loc[df.index[i], 'equity'] = df.loc[df.index[i-1], 'equity']
+            # 각 캔들에 대해 시뮬레이션
+            for i in range(len(df)):
+                current_price = df['close'].iloc[i]
                 
-                # 신호에 따른 포지션 변경
-                if df.loc[df.index[i], 'signal'] == 1 and position <= 0:
-                    # 롱 진입
+                # 포지션 진입
+                if df['position'].iloc[i] == 1 and position <= 0:
                     position = 1
-                    entry_price = df.loc[df.index[i], 'close']
-                    stop_price = entry_price * 0.95  # 5% 손절
-                    df.loc[df.index[i], 'position'] = position
+                    entry_price = current_price
+                    stop_price = self._calculate_stop_price(df, i, position)
                     df.loc[df.index[i], 'stop_price'] = stop_price
                     
-                elif df.loc[df.index[i], 'signal'] == -1 and position >= 0:
-                    # 숏 진입
-                    position = -1
-                    entry_price = df.loc[df.index[i], 'close']
-                    stop_price = entry_price * 1.05  # 5% 손절
-                    df.loc[df.index[i], 'position'] = position
-                    df.loc[df.index[i], 'stop_price'] = stop_price
+                # 포지션 청산
+                elif df['position'].iloc[i] == 0 and position != 0:
+                    # 손익 계산
+                    if position == 1:
+                        pnl = (current_price - entry_price) * self.position_size
+                    else:
+                        pnl = (entry_price - current_price) * self.position_size
+                        
+                    equity += pnl
+                    df.loc[df.index[i], 'pnl'] = pnl
+                    df.loc[df.index[i], 'equity'] = equity
                     
-                # 손절 체크
-                if position != 0:
-                    current_price = df.loc[df.index[i], 'close']
+                    position = 0
+                    entry_price = 0
+                    stop_price = 0
+                    
+                # 스탑로스 체크
+                if position != 0 and stop_price > 0:
                     if (position == 1 and current_price <= stop_price) or \
                        (position == -1 and current_price >= stop_price):
-                        # 손절
+                        df.loc[df.index[i], 'stop_hit'] = True
                         df.loc[df.index[i], 'stop_loss'] = True
-                        position = 0
-                        entry_price = 0.0
-                        stop_price = 0.0
-                        df.loc[df.index[i], 'position'] = position
-                        df.loc[df.index[i], 'stop_price'] = np.nan
                         
-                # 수익/손실 계산
-                if position != 0:
-                    pnl = (df.loc[df.index[i], 'close'] - entry_price) * position
-                    commission = abs(pnl) * self.commission
-                    slippage = abs(pnl) * self.slippage
-                    net_pnl = pnl - commission - slippage
-                    
-                    df.loc[df.index[i], 'pnl'] = net_pnl
-                    df.loc[df.index[i], 'equity'] = df.loc[df.index[i-1], 'equity'] + net_pnl
+                        # 손익 계산
+                        if position == 1:
+                            pnl = (stop_price - entry_price) * self.position_size
+                        else:
+                            pnl = (entry_price - stop_price) * self.position_size
+                            
+                        equity += pnl
+                        df.loc[df.index[i], 'pnl'] = pnl
+                        df.loc[df.index[i], 'equity'] = equity
+                        
+                        position = 0
+                        entry_price = 0
+                        stop_price = 0
             
             return df
             

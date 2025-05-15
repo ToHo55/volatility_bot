@@ -100,10 +100,20 @@ class Logger:
         에러 메시지 출력
         
         Args:
-            error (Exception): 에러 객체
+            error (Exception): 발생한 에러
         """
-        self.console.print(Panel(f"[bold red]에러 발생: {str(error)}[/bold red]"))
-        logger.exception(error)
+        try:
+            error_type = type(error).__name__
+            error_msg = str(error)
+            
+            # 콘솔 출력
+            self.console.print(f"[red]에러 발생: {error_msg}[/red]")
+            
+            # 로그 파일 기록
+            self.logger.error(f"{error_type}: {error_msg}")
+            
+        except Exception as e:
+            self.logger.error(f"에러 메시지 출력 중 추가 오류 발생: {e}")
     
     def print_trade(self, trade_info: dict):
         """
