@@ -52,6 +52,9 @@ jobs:
           # TA-Lib 설치 (빌드 격리 비활성화)
           pip install --no-build-isolation ta-lib==0.4.28
           
+          # pytest와 관련 의존성 설치
+          pip install pytest==7.4.0 pytest-cov==4.1.0 pytest-mock==3.11.1 pluggy>=1.0.0
+          
           # 나머지 패키지
           pip install --no-deps -r requirements.txt
       
