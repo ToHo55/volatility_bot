@@ -100,51 +100,77 @@ class DataSource:
             return df
         return pd.DataFrame()
     
-    def get_historical_data(self, ticker: str, start_date: str, 
-                           end_date: str, interval: str = "minute1") -> pd.DataFrame:
+    def get_historical_data(self, symbol: str, interval: str, 
+                          start_date: Optional[str] = None, 
+                          end_date: Optional[str] = None) -> Optional[pd.DataFrame]:
         """
-        지정된 기간의 히스토리컬 데이터 조회
+        과거 데이터 조회
         
         Args:
-            ticker (str): 코인 티커
-            start_date (str): 시작 날짜 (YYYY-MM-DD)
-            end_date (str): 종료 날짜 (YYYY-MM-DD)
-            interval (str): 시간 간격
+            symbol (str): 거래 심볼
+            interval (str): 시간 간격 (1m, 5m, 15m, 30m, 1h, 4h, 1d, 1w, 1M)
+            start_date (str, optional): 시작 날짜 (YYYY-MM-DD)
+            end_date (str, optional): 종료 날짜 (YYYY-MM-DD)
             
         Returns:
-            pd.DataFrame: 히스토리컬 데이터
+            Optional[pd.DataFrame]: OHLCV 데이터
         """
-        start = datetime.strptime(start_date, "%Y-%m-%d")
-        end = datetime.strptime(end_date, "%Y-%m-%d")
-        
-        all_data = []
-        current = start
-        
-        while current <= end:
-            date_str = current.strftime("%Y-%m-%d")
+        try:
+            # 날짜 처리
+            if start_date is None:
+                if interval == "1d":
+                    start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+                elif interval == "1h":
+                    start_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+                else:
+                    start_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+                    
+            if end_date is None:
+                end_date = datetime.now().strftime("%Y-%m-%d")
+                
+            # 날짜 파싱
+            try:
+                start = datetime.strptime(start_date, "%Y-%m-%d")
+                end = datetime.strptime(end_date, "%Y-%m-%d")
+            except ValueError:
+                # 상대적 기간 처리 (예: "1d", "1w", "1mo")
+                if start_date.endswith("d"):
+                    days = int(start_date[:-1])
+                    start = datetime.now() - timedelta(days=days)
+                elif start_date.endswith("w"):
+                    weeks = int(start_date[:-1])
+                    start = datetime.now() - timedelta(weeks=weeks)
+                elif start_date.endswith("mo"):
+                    months = int(start_date[:-2])
+                    start = datetime.now() - timedelta(days=months*30)
+                else:
+                    raise ValueError(f"잘못된 날짜 형식: {start_date}")
+                    
+                end = datetime.now()
+                
+            # 데이터 조회
+            df = self.get_upbit_ohlcv(symbol, interval, 
+                                    (end - start).days + 1)
             
-            # 캐시 확인
-            cached_data = self.load_from_cache("upbit", ticker, interval, date_str)
+            if df is None or len(df) == 0:
+                logger.error(f"데이터 조회 실패: {symbol}")
+                return None
+                
+            # 날짜 필터링
+            df = df[(df.index >= start) & (df.index <= end)]
             
-            if not cached_data.empty:
-                all_data.append(cached_data)
-            else:
-                # API로 데이터 조회
-                df = self.get_upbit_ohlcv(ticker, interval=interval, 
-                                        to=current.strftime("%Y-%m-%d %H:%M:%S"))
-                if not df.empty:
-                    self.save_to_cache(df, "upbit", ticker, interval, date_str)
-                    all_data.append(df)
+            return df
             
-            current += timedelta(days=1)
-        
-        if all_data:
-            return pd.concat(all_data)
-        return pd.DataFrame()
+        except Exception as e:
+            logger.error(f"과거 데이터 조회 중 오류 발생: {e}")
+            return None
 
 if __name__ == "__main__":
     # 테스트 코드
     ds = DataSource()
-    df = ds.get_historical_data("KRW-BTC", "2024-05-01", "2024-05-08")
-    print(f"수집된 데이터 크기: {len(df)}")
-    print(df.head()) 
+    df = ds.get_historical_data("KRW-BTC", "1d")
+    if df is not None:
+        print(f"수집된 데이터 크기: {len(df)}")
+        print(df.head())
+    else:
+        print("데이터 로드 실패") 

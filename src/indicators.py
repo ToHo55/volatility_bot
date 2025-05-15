@@ -26,11 +26,36 @@ class TechnicalIndicators:
         if series is None or len(series) == 0:
             raise ValueError("가격 데이터가 비어있습니다.")
             
+        if len(series) < period + 1:
+            # 데이터가 부족한 경우 NaN으로 채움
+            return pd.Series([np.nan] * len(series), index=series.index)
+            
         try:
-            rsi = ta.rsi(series, length=period)
-            rsi = rsi.clip(0, 100)  # 0-100 사이로 클리핑
-            rsi.name = 'rsi'
+            # 가격 변화 계산
+            delta = series.diff()
+            
+            # 상승/하락 구분
+            gain = delta.where(delta > 0, 0)
+            loss = -delta.where(delta < 0, 0)
+            
+            # 평균 상승/하락 계산
+            avg_gain = gain.rolling(window=period).mean()
+            avg_loss = loss.rolling(window=period).mean()
+            
+            # RS 계산
+            rs = avg_gain / avg_loss
+            
+            # RSI 계산
+            rsi = 100 - (100 / (1 + rs))
+            
+            # NaN 처리
+            rsi = rsi.fillna(50)  # 초기값을 50으로 설정
+            
+            # 0-100 사이로 클리핑
+            rsi = rsi.clip(0, 100)
+            
             return rsi
+            
         except Exception as e:
             logger.error(f"RSI 계산 중 오류 발생: {e}")
             raise

@@ -80,6 +80,7 @@ class Executor:
         self.datasource = datasource or DataSource()
         self.console = Console()
         self.trade_history = []  # 거래 기록
+        self.logger = logger  # logger 속성 추가
         
     def place_order(self, symbol: str, side: str, quantity: float, 
                    price: float, order_type: str = "limit") -> Order:
@@ -317,6 +318,7 @@ class Executor:
         Returns:
             Dict[str, Any]: 실행 결과
                 - success: 실행 성공 여부
+                - status: 거래 상태
                 - order_id: 주문 ID
                 - filled_price: 체결 가격
                 - filled_amount: 체결 수량
@@ -327,6 +329,7 @@ class Executor:
             if not self.validate_trade(trade):
                 return {
                     'success': False,
+                    'status': 'rejected',
                     'error': 'Invalid trade parameters'
                 }
                 
@@ -334,6 +337,7 @@ class Executor:
             # 현재는 시뮬레이션으로 구현
             result = {
                 'success': True,
+                'status': 'filled',
                 'order_id': f"order_{len(self.trade_history)}",
                 'filled_price': trade['price'],
                 'filled_amount': trade['amount'],
@@ -368,6 +372,7 @@ class Executor:
             logger.error(error_msg)
             return {
                 'success': False,
+                'status': 'error',
                 'error': error_msg
             }
             
@@ -383,6 +388,7 @@ class Executor:
                 - success: 처리 성공 여부
                 - error: 에러 메시지
                 - action: 취한 조치
+                - timestamp: 처리 시간
         """
         try:
             error_msg = str(error)
@@ -401,7 +407,8 @@ class Executor:
             return {
                 'success': False,
                 'error': error_msg,
-                'action': action
+                'action': action,
+                'timestamp': pd.Timestamp.now()
             }
             
         except Exception as e:
@@ -409,7 +416,8 @@ class Executor:
             return {
                 'success': False,
                 'error': str(e),
-                'action': "에러 처리 실패"
+                'action': "에러 처리 실패",
+                'timestamp': pd.Timestamp.now()
             }
 
 if __name__ == "__main__":
