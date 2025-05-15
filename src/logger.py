@@ -23,7 +23,8 @@ class Logger:
         os.makedirs(log_dir, exist_ok=True)
         
         # 로그 파일 경로
-        log_file = os.path.join(log_dir, f"trading_{datetime.now().strftime('%Y%m%d')}.log")
+        trading_log = os.path.join(log_dir, "trading.log")
+        error_log = os.path.join(log_dir, "error.log")
         
         # 기존 핸들러 제거
         logger.remove()
@@ -37,12 +38,24 @@ class Logger:
             diagnose=True
         )
         
-        # 파일 출력 설정
+        # 거래 로그 파일 설정
         logger.add(
-            log_file,
+            trading_log,
             format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
-            level="DEBUG",
-            rotation="00:00",  # 매일 자정에 새 파일
+            level="INFO",
+            rotation="1 MB",  # 1MB마다 새 파일
+            retention="30 days",  # 30일 보관
+            compression="zip",  # 압축 저장
+            backtrace=True,
+            diagnose=True
+        )
+        
+        # 에러 로그 파일 설정
+        logger.add(
+            error_log,
+            format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+            level="ERROR",
+            rotation="1 MB",  # 1MB마다 새 파일
             retention="30 days",  # 30일 보관
             compression="zip",  # 압축 저장
             backtrace=True,
@@ -71,14 +84,16 @@ class Logger:
             table.add_row(str(key), str(value))
         
         self.console.print(Panel(table, title="[bold green]시작[/bold green]"))
-        logger.info("트레이딩 봇 시작")
+        logger.info("Starting trading bot")
+        for key, value in config.items():
+            logger.info(f"{key}: {value}")
     
     def print_shutdown(self):
         """
         종료 메시지 출력
         """
         self.console.print(Panel("[bold red]트레이딩 봇 종료[/bold red]"))
-        logger.info("트레이딩 봇 종료")
+        logger.info("Shutting down trading bot")
     
     def print_error(self, error: Exception):
         """
