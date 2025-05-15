@@ -1,6 +1,8 @@
 import time
 import uuid
-from typing import Dict, List, Optional, Tuple
+import pandas as pd
+import numpy as np
+from typing import Dict, List, Optional, Tuple, Any
 from datetime import datetime
 from loguru import logger
 from rich.console import Console
@@ -58,7 +60,7 @@ class Position:
 
 class Executor:
     def __init__(self, api_key: str, secret_key: str, 
-                 initial_capital: float = 1000000):
+                 initial_capital: float = 1000000, datasource: Optional[DataSource] = None):
         """
         실행기 초기화
         
@@ -66,6 +68,7 @@ class Executor:
             api_key (str): Upbit API 키
             secret_key (str): Upbit Secret 키
             initial_capital (float): 초기 자본금
+            datasource (DataSource, optional): 데이터 소스 객체
         """
         self.api_key = api_key
         self.secret_key = secret_key
@@ -74,8 +77,9 @@ class Executor:
         self.positions: Dict[str, Position] = {}
         self.orders: Dict[str, Order] = {}
         self.signal_generator = SignalGenerator()
-        self.data_source = DataSource()
+        self.datasource = datasource or DataSource()
         self.console = Console()
+        self.trade_history = []  # 거래 기록
         
     def place_order(self, symbol: str, side: str, quantity: float, 
                    price: float, order_type: str = "limit") -> Order:
@@ -179,7 +183,7 @@ class Executor:
         """
         try:
             # 최신 데이터 조회
-            df = self.data_source.get_historical_data(symbol, "1h", 100)
+            df = self.datasource.get_historical_data(symbol, "1h", 100)
             if df is None or len(df) == 0:
                 logger.error("데이터 조회 실패")
                 return
@@ -256,6 +260,157 @@ class Executor:
             
         except Exception as e:
             logger.error(f"상태 출력 중 오류 발생: {e}")
+    
+    def validate_trade(self, trade: Dict[str, Any]) -> bool:
+        """
+        거래 유효성 검사
+        
+        Args:
+            trade (Dict[str, Any]): 거래 정보
+                - symbol: 거래 심볼
+                - side: 거래 방향 (buy/sell)
+                - amount: 거래 수량
+                - price: 거래 가격
+                
+        Returns:
+            bool: 거래 유효성 여부
+        """
+        try:
+            # 필수 필드 검사
+            required_fields = ['symbol', 'side', 'amount', 'price']
+            if not all(field in trade for field in required_fields):
+                logger.error(f"필수 필드 누락: {required_fields}")
+                return False
+                
+            # 거래 방향 검사
+            if trade['side'] not in ['buy', 'sell']:
+                logger.error(f"잘못된 거래 방향: {trade['side']}")
+                return False
+                
+            # 수량 검사
+            if trade['amount'] <= 0:
+                logger.error(f"잘못된 거래 수량: {trade['amount']}")
+                return False
+                
+            # 가격 검사
+            if trade['price'] <= 0:
+                logger.error(f"잘못된 거래 가격: {trade['price']}")
+                return False
+                
+            return True
+            
+        except Exception as e:
+            logger.error(f"거래 유효성 검사 중 오류 발생: {e}")
+            return False
+            
+    def execute_trade(self, trade: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        거래 실행
+        
+        Args:
+            trade (Dict[str, Any]): 거래 정보
+                - symbol: 거래 심볼
+                - side: 거래 방향 (buy/sell)
+                - amount: 거래 수량
+                - price: 거래 가격
+                
+        Returns:
+            Dict[str, Any]: 실행 결과
+                - success: 실행 성공 여부
+                - order_id: 주문 ID
+                - filled_price: 체결 가격
+                - filled_amount: 체결 수량
+                - timestamp: 체결 시간
+        """
+        try:
+            # 거래 유효성 검사
+            if not self.validate_trade(trade):
+                return {
+                    'success': False,
+                    'error': 'Invalid trade parameters'
+                }
+                
+            # 거래 실행 (실제 구현은 거래소 API 연동 필요)
+            # 현재는 시뮬레이션으로 구현
+            result = {
+                'success': True,
+                'order_id': f"order_{len(self.trade_history)}",
+                'filled_price': trade['price'],
+                'filled_amount': trade['amount'],
+                'timestamp': pd.Timestamp.now()
+            }
+            
+            # 거래 기록 저장
+            self.trade_history.append({
+                **trade,
+                **result
+            })
+            
+            # 포지션 업데이트
+            symbol = trade['symbol']
+            if symbol not in self.positions:
+                self.positions[symbol] = Position(symbol, trade['side'], 0, trade['price'])
+                
+            position = self.positions[symbol]
+            if trade['side'] == 'buy':
+                position.quantity += trade['amount']
+            else:
+                position.quantity -= trade['amount']
+                
+            # 포지션이 0이 되면 삭제
+            if position.quantity == 0:
+                del self.positions[symbol]
+                
+            return result
+            
+        except Exception as e:
+            error_msg = f"거래 실행 중 오류 발생: {e}"
+            logger.error(error_msg)
+            return {
+                'success': False,
+                'error': error_msg
+            }
+            
+    def handle_error(self, error: Exception) -> Dict[str, Any]:
+        """
+        에러 처리
+        
+        Args:
+            error (Exception): 발생한 에러
+            
+        Returns:
+            Dict[str, Any]: 에러 처리 결과
+                - success: 처리 성공 여부
+                - error: 에러 메시지
+                - action: 취한 조치
+        """
+        try:
+            error_msg = str(error)
+            logger.error(f"에러 발생: {error_msg}")
+            
+            # 에러 유형에 따른 처리
+            if "insufficient balance" in error_msg.lower():
+                action = "잔고 부족으로 거래 취소"
+            elif "invalid price" in error_msg.lower():
+                action = "잘못된 가격으로 거래 취소"
+            elif "network error" in error_msg.lower():
+                action = "네트워크 오류로 재시도"
+            else:
+                action = "알 수 없는 오류로 거래 취소"
+                
+            return {
+                'success': False,
+                'error': error_msg,
+                'action': action
+            }
+            
+        except Exception as e:
+            logger.error(f"에러 처리 중 추가 오류 발생: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'action': "에러 처리 실패"
+            }
 
 if __name__ == "__main__":
     # 테스트 코드
