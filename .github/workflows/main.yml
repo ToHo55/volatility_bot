@@ -33,6 +33,11 @@ jobs:
 
           make -j1
           sudo make install
+          
+          # Set environment variables for Python binding
+          export TA_INCLUDE_PATH=/usr/include
+          export TA_LIBRARY_PATH=/usr/lib
+          sudo ldconfig
       
       - name: Install Python dependencies
         run: |
