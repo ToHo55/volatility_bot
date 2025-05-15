@@ -56,7 +56,7 @@ jobs:
           pip install pytest==7.4.0 pytest-cov==4.1.0 pytest-mock==3.11.1 pluggy>=1.0.0
           
           # 누락된 의존성 패키지 설치
-          pip install PyJWT pygments
+          pip install PyJWT pygments urllib3 certifi charset-normalizer idna markdown-it-py python-dateutil pytz
           
           # 나머지 패키지
           pip install --no-deps -r requirements.txt
