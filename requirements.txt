@@ -1,6 +1,12 @@
-numpy<1.24
-pandas==1.5.3
-pandas-ta>=0.3.14b0
+numpy>=1.21.0
+pandas>=1.5.0
+websockets>=10.0
+joblib>=1.1.0
+optuna>=3.0.0
+scikit-learn>=1.0.0
+pandas-ta>=0.3.0
+python-telegram-bot>=20.0
+rich>=12.0.0
 pytest==7.4.0
 pytest-cov==4.1.0
 pytest-mock==3.11.1
@@ -10,9 +16,7 @@ requests==2.31.0
 # TA-Lib is installed separately with specific build options
 pyupbit>=0.2.33
 loguru==0.7.2
-rich==13.7.0
 httpx>=0.24.1
-python-telegram-bot>=20.4
 cryptography>=41.0.3
 yfinance==0.2.36
 peewee>=3.15.0 
