@@ -1,5 +1,4 @@
 import pandas as pd
-import pandas_ta as ta
 import numpy as np
 from typing import Union, Optional
 from loguru import logger
@@ -130,7 +129,14 @@ class TechnicalIndicators:
             raise ValueError("가격 데이터가 비어있습니다.")
             
         try:
-            atr = ta.atr(high=high, low=low, close=close, length=period)
+            # True Range 계산
+            tr1 = high - low
+            tr2 = abs(high - close.shift(1))
+            tr3 = abs(low - close.shift(1))
+            tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+            
+            # ATR 계산
+            atr = tr.rolling(window=period).mean()
             atr.name = 'atr'
             return atr
         except Exception as e:
