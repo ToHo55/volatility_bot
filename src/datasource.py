@@ -218,9 +218,6 @@ class DataSource:
             # 필요한 컬럼만 선택
             df = df[['open', 'high', 'low', 'close', 'volume']]
             
-            # 데이터 검증 및 전처리
-            df = self._validate_data(df, symbol)
-            
             # 데이터 정렬
             df = df.sort_index()
             
@@ -248,10 +245,6 @@ class DataSource:
             date (str, optional): 날짜 (기본값: 현재 날짜)
         """
         try:
-            if df is None or len(df) == 0:
-                logger.warning("저장할 데이터가 비어있습니다.")
-                return
-                
             if date is None:
                 date = datetime.now().strftime('%Y%m%d')
                 
@@ -261,14 +254,8 @@ class DataSource:
             # 디렉토리 생성
             os.makedirs(os.path.dirname(cache_file), exist_ok=True)
             
-            # 데이터 검증
-            required_columns = ['open', 'high', 'low', 'close', 'volume']
-            if not all(col in df.columns for col in required_columns):
-                raise ValueError(f"필수 컬럼이 누락되었습니다: {required_columns}")
-            
             # 데이터 저장
-            df.to_csv(cache_file, index=True)
-            logger.info(f"캐시 저장 완료: {cache_file}")
+            df.to_csv(cache_file)
             
         except Exception as e:
             logger.error(f"캐시 저장 실패: {e}")
