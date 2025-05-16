@@ -78,9 +78,25 @@ class TechnicalIndicators:
             raise ValueError("가격 데이터가 비어있습니다.")
             
         try:
-            ema = ta.ema(series, length=period)
+            # EMA 계산
+            multiplier = 2 / (period + 1)
+            ema = pd.Series(index=series.index, dtype=float)
+            
+            # 첫 번째 EMA는 SMA로 계산
+            ema.iloc[period-1] = series.iloc[:period].mean()
+            
+            # 나머지 기간에 대해 EMA 계산
+            for i in range(period, len(series)):
+                ema.iloc[i] = (series.iloc[i] - ema.iloc[i-1]) * multiplier + ema.iloc[i-1]
+                
+            # 초기값을 NaN으로 설정
+            ema.iloc[:period-1] = np.nan
+            
+            # 컬럼 이름 설정
             ema.name = f'ema{period}'
+            
             return ema
+            
         except Exception as e:
             logger.error(f"EMA 계산 중 오류 발생: {e}")
             raise

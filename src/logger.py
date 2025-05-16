@@ -7,6 +7,7 @@ from rich.logging import RichHandler
 from rich.panel import Panel
 from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
+import logging
 
 class Logger:
     def __init__(self, log_dir: str = "logs"):
@@ -68,6 +69,21 @@ class Logger:
             format="{message}",
             level="INFO"
         )
+        
+        # 로거 설정
+        self.logger = logging.getLogger("trading_bot")
+        self.logger.setLevel(logging.INFO)
+        
+        # 파일 핸들러 설정
+        file_handler = logging.FileHandler(trading_log)
+        file_handler.setLevel(logging.INFO)
+        
+        # 포맷터 설정
+        formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d - %(message)s')
+        file_handler.setFormatter(formatter)
+        
+        # 핸들러 추가
+        self.logger.addHandler(file_handler)
     
     def print_startup(self, config: dict):
         """
@@ -122,15 +138,23 @@ class Logger:
         Args:
             trade_info (dict): 거래 정보
         """
-        table = Table(title="거래 실행")
-        table.add_column("항목", style="cyan")
-        table.add_column("값", style="magenta")
-        
-        for key, value in trade_info.items():
-            table.add_row(str(key), str(value))
-        
-        self.console.print(table)
-        logger.info(f"거래 실행: {trade_info}")
+        try:
+            # 거래 정보 포맷팅
+            trade_info_str = (
+                f"거래 실행: {trade_info['symbol']} | "
+                f"방향: {trade_info['side']} | "
+                f"수량: {trade_info['quantity']} | "
+                f"가격: {trade_info['price']}"
+            )
+            
+            # 콘솔 출력
+            self.console.print(f"[blue]{trade_info_str}[/blue]")
+            
+            # 로그 파일 기록
+            self.logger.info(trade_info_str)
+            
+        except Exception as e:
+            self.logger.error(f"거래 정보 출력 중 오류 발생: {e}")
     
     def print_position(self, position_info: dict):
         """
