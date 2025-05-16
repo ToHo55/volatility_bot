@@ -7,6 +7,7 @@ from loguru import logger
 from typing import Optional, Dict, List
 import requests
 import numpy as np
+import logging
 
 class DataSource:
     def __init__(self, cache_dir: str = "data/raw"):
@@ -24,6 +25,27 @@ class DataSource:
         self.last_call_time = 0
         self.call_count = 0
         self.rate_limit_reset_time = time.time() + 60  # 1분 후 리셋
+        
+        self.logger = logging.getLogger('trading_bot')
+        self.logger.setLevel(logging.INFO)
+        
+        # 로그 디렉토리 생성
+        os.makedirs('logs', exist_ok=True)
+        
+        # 파일 핸들러 설정 (UTF-8 인코딩 사용)
+        file_handler = logging.FileHandler('logs/trading.log', encoding='utf-8')
+        error_handler = logging.FileHandler('logs/error.log', encoding='utf-8')
+        
+        # 포맷터 설정
+        formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d - %(message)s')
+        file_handler.setFormatter(formatter)
+        error_handler.setFormatter(formatter)
+        
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(error_handler)
+        
+        # 캐시 딕셔너리 초기화
+        self._cache = {}
         
     def _rate_limit(self):
         """
@@ -94,6 +116,9 @@ class DataSource:
                     logger.warning(f"API 호출 제한 도달. {retry_after}초 후 재시도")
                     time.sleep(retry_after)
                     continue
+                elif e.response.status_code == 404:  # Not Found
+                    logger.error(f"API 요청 실패: {e}")
+                    raise ValueError(f"잘못된 심볼 또는 인터벌: {e}")
                 else:
                     logger.error(f"API HTTP 오류: {e}")
                     raise
@@ -169,48 +194,78 @@ class DataSource:
             logger.error(f"데이터 검증 중 오류 발생: {e}")
             return pd.DataFrame()
             
-    def get_upbit_ohlcv(self, symbol: str, interval: str, count: int) -> pd.DataFrame:
-        """Upbit OHLCV 데이터 조회"""
+    def get_upbit_ohlcv(self, symbol: str, interval: str, count: int = 200) -> pd.DataFrame:
+        """업비트 API에서 OHLCV 데이터를 가져옵니다."""
         try:
-            # API 엔드포인트 설정
-            url = "https://api.upbit.com/v1/candles/minutes/60"
+            # 캐시 키 생성
+            cache_key = f"{symbol}_{interval}_{count}"
+            
+            # 캐시된 데이터 확인
+            if cache_key in self._cache:
+                cached_data = self._cache[cache_key]
+                if not cached_data.empty:
+                    return cached_data
+            
+            # interval에 따라 URL 결정
             if interval == "1d":
                 url = "https://api.upbit.com/v1/candles/days"
             elif interval == "1w":
                 url = "https://api.upbit.com/v1/candles/weeks"
             elif interval == "1M":
                 url = "https://api.upbit.com/v1/candles/months"
+            else:
+                # 기본적으로 분봉 (예: 1h -> 60분)
+                try:
+                    minute = int(interval.replace("m", "").replace("h", ""))
+                    if "h" in interval:
+                        minute *= 60
+                except Exception:
+                    raise ValueError(f"지원하지 않는 interval: {interval}")
+                url = f"https://api.upbit.com/v1/candles/minutes/{minute}"
+            params = {"market": symbol, "count": count}
             
-            # 파라미터 설정
-            params = {
-                "market": symbol,
-                "count": count
-            }
+            # count 유효성 검사
+            if count < 1:
+                raise ValueError(f"count는 1 이상이어야 합니다: {count}")
             
             # API 요청
             response = self._make_request(url, params)
             data = response.json()
             
-            # 데이터프레임 변환
+            if data is None or len(data) == 0:
+                raise ValueError(f"데이터를 가져올 수 없습니다: {symbol}")
+            
+            # 데이터프레임 생성 및 전처리
             df = pd.DataFrame(data)
+            
+            # 타임스탬프 컬럼 처리
+            if 'candle_date_time_kst' in df.columns:
+                df['timestamp'] = pd.to_datetime(df['candle_date_time_kst'])
+                df = df.drop('candle_date_time_kst', axis=1)
+            elif 'candle_date_time_utc' in df.columns:
+                df['timestamp'] = pd.to_datetime(df['candle_date_time_utc'])
+                df = df.drop('candle_date_time_utc', axis=1)
+            
+            # 컬럼명 변경
             df = df.rename(columns={
-                "opening_price": "open",
-                "high_price": "high",
-                "low_price": "low",
-                "trade_price": "close",
-                "candle_acc_trade_volume": "volume",
-                "candle_date_time_kst": "timestamp"
+                'opening_price': 'open',
+                'high_price': 'high',
+                'low_price': 'low',
+                'trade_price': 'close',
+                'candle_acc_trade_volume': 'volume'
             })
             
-            # 인덱스 설정
-            df['timestamp'] = pd.to_datetime(df['timestamp'])
-            df.set_index('timestamp', inplace=True)
-            df.sort_index(inplace=True)
+            # 필요한 컬럼만 선택
+            df = df[['timestamp', 'open', 'high', 'low', 'close', 'volume']]
             
-            return df[['open', 'high', 'low', 'close', 'volume']]
+            # 캐시에 저장
+            self._cache[cache_key] = df
+            
+            return df
+            
         except Exception as e:
-            self.logger.error(f"Upbit API 요청 실패: {str(e)}")
-            return None
+            logger.error(f"Upbit API 요청 실패: {e}")
+            raise
     
     def save_to_cache(self, df: pd.DataFrame, symbol: str, interval: str, cache_path: str):
         """데이터 캐시 저장"""
@@ -226,7 +281,7 @@ class DataSource:
         try:
             file_path = os.path.join(cache_path, f"{symbol}_{interval}.csv")
             if not os.path.exists(file_path):
-                return None
+                raise FileNotFoundError(f"캐시 파일이 존재하지 않습니다: {file_path}")
             
             df = pd.read_csv(file_path, index_col=0, parse_dates=True, encoding='utf-8')
             
@@ -236,7 +291,7 @@ class DataSource:
             return df
         except Exception as e:
             self.logger.error(f"캐시 로드 중 오류 발생: {str(e)}")
-            return None
+            raise
     
     def get_historical_data(self, symbol: str, interval: str, period: str) -> pd.DataFrame:
         """과거 데이터 조회"""
@@ -260,12 +315,12 @@ class DataSource:
             # 데이터 조회
             df = self.get_upbit_ohlcv(symbol, interval, count)
             if df is None:
-                return None
+                raise ValueError("데이터 조회 실패: None 반환")
             
             return df
         except Exception as e:
             self.logger.error(f"과거 데이터 조회 중 오류 발생: {str(e)}")
-            return None
+            raise
 
 if __name__ == "__main__":
     # 테스트 코드

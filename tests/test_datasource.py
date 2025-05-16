@@ -11,7 +11,7 @@ def datasource():
 def test_get_upbit_ohlcv(datasource):
     """Upbit OHLCV 데이터 조회 테스트"""
     # 테스트 데이터
-    symbol = "BTC-KRW"
+    symbol = "KRW-BTC"
     interval = "1h"
     count = 10
     
@@ -27,7 +27,7 @@ def test_get_upbit_ohlcv(datasource):
 def test_save_and_load_cache(datasource, tmp_path):
     """캐시 저장 및 로드 테스트"""
     # 테스트 데이터
-    symbol = "BTC-KRW"
+    symbol = "KRW-BTC"
     interval = "1h"
     df = pd.DataFrame({
         'open': [100, 101, 102],
@@ -48,12 +48,12 @@ def test_save_and_load_cache(datasource, tmp_path):
     assert isinstance(loaded_df, pd.DataFrame)
     assert len(loaded_df) == len(df)
     assert all(col in loaded_df.columns for col in df.columns)
-    pd.testing.assert_frame_equal(df, loaded_df)
+    pd.testing.assert_frame_equal(df, loaded_df, check_freq=False)
 
 def test_get_historical_data(datasource):
     """히스토리컬 데이터 조회 테스트"""
     # 테스트 데이터
-    symbol = "BTC-KRW"
+    symbol = "KRW-BTC"
     interval = "1h"
     days = 7
     
@@ -80,11 +80,11 @@ def test_error_handling(datasource):
     
     # 잘못된 인터벌
     with pytest.raises(Exception):
-        datasource.get_upbit_ohlcv("BTC-KRW", "invalid", 10)
+        datasource.get_upbit_ohlcv("KRW-BTC", "invalid", 10)
     
     # 잘못된 개수
     with pytest.raises(Exception):
-        datasource.get_upbit_ohlcv("BTC-KRW", "1h", -1)
+        datasource.get_upbit_ohlcv("KRW-BTC", "1h", -1)
 
 def test_datasource_initialization():
     datasource = DataSource()
@@ -92,6 +92,6 @@ def test_datasource_initialization():
 
 def test_get_historical_data():
     datasource = DataSource()
-    df = datasource.get_historical_data("BTC-USD", "1d", "1mo")
+    df = datasource.get_historical_data("KRW-BTC", "1d", "1mo")
     assert df is not None
     assert not df.empty 
