@@ -67,31 +67,21 @@ class TechnicalIndicators:
     def calc_ema(self, data: pd.Series, period: int) -> pd.Series:
         """지수이동평균(EMA) 계산"""
         try:
-            # 데이터가 충분한지 확인
             if len(data) < period:
-                ema = pd.Series([np.nan] * len(data), index=data.index)
-                ema.name = f'ema{period}'
-                return ema
+                return pd.Series(index=data.index, dtype=float)
             
-            # EMA 계산
             ema = pd.Series(index=data.index, dtype=float)
-            ema.iloc[period-1] = data.iloc[:period].mean()  # 초기값 설정
+            ema.iloc[period-1] = data.iloc[:period].mean()
             
-            # 나머지 기간에 대해 EMA 계산
+            multiplier = 2 / (period + 1)
             for i in range(period, len(data)):
-                ema.iloc[i] = (data.iloc[i] * (2 / (period + 1))) + \
-                            (ema.iloc[i-1] * (1 - 2 / (period + 1)))
+                ema.iloc[i] = (data.iloc[i] - ema.iloc[i-1]) * multiplier + ema.iloc[i-1]
             
-            # 이름 설정
             ema.name = f'ema{period}'
-            
             return ema
-            
         except Exception as e:
             logger.error(f"EMA 계산 중 오류 발생: {str(e)}")
-            ema = pd.Series([np.nan] * len(data), index=data.index)
-            ema.name = f'ema{period}'
-            return ema
+            return pd.Series(index=data.index, dtype=float)
 
     def ema_slope(self, series: pd.Series, period: int = 5) -> pd.Series:
         """
@@ -120,79 +110,43 @@ class TechnicalIndicators:
             logger.error(f"EMA 기울기 계산 중 오류 발생: {e}")
             raise
 
-    def calc_atr(self, high: pd.Series, low: pd.Series, 
-                close: pd.Series, period: int = 14) -> pd.Series:
-        """
-        ATR(Average True Range) 계산
-        
-        Args:
-            high (pd.Series): 고가 데이터
-            low (pd.Series): 저가 데이터
-            close (pd.Series): 종가 데이터
-            period (int): 기간 (기본값: 14)
-            
-        Returns:
-            pd.Series: ATR 값
-        """
-        if period <= 0:
-            raise ValueError("ATR 기간은 0보다 커야 합니다.")
-            
-        if any(x is None or len(x) == 0 for x in [high, low, close]):
-            raise ValueError("가격 데이터가 비어있습니다.")
-            
+    def calc_atr(self, high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
+        """평균진폭(ATR) 계산"""
         try:
-            # True Range 계산
-            tr1 = high - low
-            tr2 = abs(high - close.shift(1))
-            tr3 = abs(low - close.shift(1))
-            tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+            if len(high) < period:
+                return pd.Series(index=high.index, dtype=float)
             
-            # ATR 계산
-            atr = tr.rolling(window=period).mean()
+            tr = pd.DataFrame(index=high.index, dtype=float)
+            tr['h-l'] = high - low
+            tr['h-pc'] = abs(high - close.shift(1))
+            tr['l-pc'] = abs(low - close.shift(1))
+            tr['tr'] = tr[['h-l', 'h-pc', 'l-pc']].max(axis=1)
+            
+            atr = pd.Series(index=high.index, dtype=float)
+            atr.iloc[period-1] = tr['tr'].iloc[:period].mean()
+            
+            for i in range(period, len(high)):
+                atr.iloc[i] = (atr.iloc[i-1] * (period-1) + tr['tr'].iloc[i]) / period
+            
             atr.name = 'atr'
             return atr
         except Exception as e:
-            logger.error(f"ATR 계산 중 오류 발생: {e}")
-            raise
+            logger.error(f"ATR 계산 중 오류 발생: {str(e)}")
+            return pd.Series(index=high.index, dtype=float)
 
     def add_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        데이터프레임에 모든 기술적 지표 추가
-        
-        Args:
-            df (pd.DataFrame): OHLCV 데이터
-            
-        Returns:
-            pd.DataFrame: 지표가 추가된 데이터프레임
-        """
-        if df is None or len(df) == 0:
-            raise ValueError("데이터프레임이 비어있습니다.")
-            
-        required_columns = ['open', 'high', 'low', 'close']
-        if not all(col in df.columns for col in required_columns):
-            raise ValueError(f"필수 컬럼이 누락되었습니다: {required_columns}")
-            
+        """모든 기술적 지표 추가"""
         try:
-            # 데이터프레임 복사
             df = df.copy()
-            
-            # RSI
-            df.loc[:, 'rsi'] = self.calc_rsi(df['close'])
-            
-            # EMA
-            df.loc[:, 'ema5'] = self.calc_ema(df['close'], 5)
-            df.loc[:, 'ema20'] = self.calc_ema(df['close'], 20)
-            
-            # EMA 기울기
-            df.loc[:, 'ema5_slope'] = self.ema_slope(df['close'], 5)
-            
-            # ATR
-            df.loc[:, 'atr'] = self.calc_atr(df['high'], df['low'], df['close'])
-            
+            df['rsi'] = self.calc_rsi(df['close'])
+            df['ema5'] = self.calc_ema(df['close'], 5)
+            df['ema20'] = self.calc_ema(df['close'], 20)
+            df['ema5_slope'] = df['ema5'] > df['ema5'].shift(1)
+            df['atr'] = self.calc_atr(df['high'], df['low'], df['close'])
             return df
         except Exception as e:
-            logger.error(f"지표 추가 중 오류 발생: {e}")
-            raise
+            logger.error(f"지표 추가 중 오류 발생: {str(e)}")
+            return df
 
 if __name__ == "__main__":
     # 테스트 코드

@@ -21,90 +21,56 @@ class SignalGenerator:
         self.indicators = TechnicalIndicators()
         
     def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        매매 신호 생성
-        
-        Args:
-            df (pd.DataFrame): OHLCV + 지표 데이터
-            
-        Returns:
-            pd.DataFrame: 매매 신호가 추가된 데이터프레임
-        """
+        """매매 시그널 생성"""
         try:
-            # 지표 계산
-            df = self.indicators.add_indicators(df)
+            df = df.copy()
             
-            # 롱 포지션 진입 조건
-            long_condition = (
-                (df['rsi'] <= self.rsi_oversold) &  # RSI 과매도
-                (df['ema5'] > df['ema20']) &       # 골든 크로스
-                (df['ema5_slope'])                 # EMA5 상승
-            )
-            
-            # 롱 포지션 청산 조건
-            exit_long_condition = (
-                (df['rsi'] >= self.rsi_overbought) |  # RSI 과매수
-                (~df['ema5_slope'])                   # EMA5 하락
-            )
-            
-            # 포지션 초기화 (매일 23:59)
+            # 포지션 초기화
             df['position'] = 0
+            df['stop_price'] = np.nan
+            df['stop_loss'] = np.nan
+            df['stop_hit'] = False
+            
+            # 진입 조건 확인
+            long_condition = (
+                (df['rsi'] < 30) &  # RSI 과매도
+                (df['ema5'] > df['ema20']) &  # EMA 골든크로스
+                (df['ema5_slope'])  # EMA 상승
+            )
+            
+            # 포지션 진입
             df.loc[long_condition, 'position'] = 1
-            df.loc[exit_long_condition, 'position'] = 0
             
-            # 손절가 계산
-            df['stop_price'] = self._calculate_stop_price(df)
+            # 스탑 가격 계산
+            for i in range(len(df)):
+                if df['position'].iloc[i] == 1:
+                    stop_price = self._calculate_stop_price(df.iloc[:i+1])
+                    df.loc[df.index[i], 'stop_price'] = stop_price
+                    df.loc[df.index[i], 'stop_loss'] = stop_price * 0.99  # 1% 하락 시 손절
             
-            # 손절 조건 확인
-            df['stop_hit'] = self._check_stop_loss(df)
-            
-            # 손절 시 포지션 청산
-            df.loc[df['stop_hit'], 'position'] = 0
+            # 스탑 히트 확인
+            df['stop_hit'] = (df['position'] == 1) & (df['low'] <= df['stop_price'])
             
             return df
-            
         except Exception as e:
-            logger.error(f"신호 생성 중 오류 발생: {e}")
+            self.logger.error(f"시그널 생성 중 오류 발생: {str(e)}")
             return df
     
-    def _calculate_stop_price(self, df: pd.DataFrame) -> pd.Series:
-        """
-        손절가 계산
-        
-        Args:
-            df (pd.DataFrame): OHLCV + 지표 데이터
-            
-        Returns:
-            pd.Series: 손절가
-        """
+    def _calculate_stop_price(self, df: pd.DataFrame) -> float:
+        """스탑 가격 계산"""
         try:
-            # 롱 포지션의 경우 고점 대비 -0.8%
-            stop_price = pd.Series(index=df.index, dtype=float)
+            if len(df) < 2:
+                return df['close'].iloc[-1] * 0.95  # 기본 5% 하락
             
-            # 롱 포지션의 고점 추적
-            high_since_entry = df['high'].copy()
-            in_position = False
+            # ATR 기반 스탑 가격 계산
+            atr = df['atr'].iloc[-1]
+            if pd.isna(atr):
+                return df['close'].iloc[-1] * 0.95
             
-            for i in range(len(df)):
-                if df['position'].iloc[i] == 1 and not in_position:
-                    in_position = True
-                    high_since_entry.iloc[i] = df['high'].iloc[i]
-                elif df['position'].iloc[i] == 0:
-                    in_position = False
-                elif in_position:
-                    high_since_entry.iloc[i] = max(high_since_entry.iloc[i-1], 
-                                                 df['high'].iloc[i])
-                
-                if in_position:
-                    stop_price.iloc[i] = high_since_entry.iloc[i] * (1 - self.stop_loss_pct/100)
-                else:
-                    stop_price.iloc[i] = np.nan
-            
-            return stop_price
-            
+            return df['close'].iloc[-1] - (atr * 2)  # ATR의 2배만큼 하락
         except Exception as e:
-            logger.error(f"손절가 계산 중 오류 발생: {e}")
-            return pd.Series(index=df.index)
+            self.logger.error(f"스탑 가격 계산 중 오류 발생: {str(e)}")
+            return df['close'].iloc[-1] * 0.95
     
     def _check_stop_loss(self, df: pd.DataFrame) -> pd.Series:
         """
@@ -139,7 +105,7 @@ if __name__ == "__main__":
     df = sg.generate_signals(data)
     
     print("생성된 신호:")
-    print(df[['position', 'stop_price', 'stop_hit']].head())
+    print(df[['position', 'stop_price', 'stop_loss', 'stop_hit']].head())
     
     # 포지션 통계
     total_signals = len(df[df['position'] != 0])

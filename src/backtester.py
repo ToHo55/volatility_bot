@@ -26,156 +26,100 @@ class Backtester:
         self.signal_generator = SignalGenerator()
         self.console = Console()
         
-    def run(self, data: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, float]]:
-        """
-        백테스트 실행
-        
-        Args:
-            data (pd.DataFrame): OHLCV 데이터
-            
-        Returns:
-            Tuple[pd.DataFrame, Dict[str, float]]: 백테스트 결과와 성과 지표
-        """
+    def run(self, data: pd.DataFrame) -> dict:
+        """백테스트 실행"""
         try:
-            # 지표 추가
-            df = self.indicators.add_indicators(data)
+            # 필수 컬럼 확인
+            required_columns = ['open', 'high', 'low', 'close', 'volume', 'position', 'stop_price', 'stop_hit']
+            if not all(col in data.columns for col in required_columns):
+                raise ValueError(f"필수 컬럼이 누락되었습니다: {required_columns}")
             
-            # 신호 생성
-            df = self.signal_generator.generate_signals(df)
+            # 데이터 타입 확인
+            if not all(data[col].dtype in [np.float64, np.int64] for col in ['open', 'high', 'low', 'close', 'volume']):
+                raise ValueError("가격 데이터는 숫자형이어야 합니다")
             
-            # 거래 시뮬레이션
-            df = self._simulate_trades(df)
+            # 초기 자본 설정
+            if self.initial_capital <= 0:
+                raise ValueError("초기 자본은 0보다 커야 합니다")
+            
+            # 백테스트 실행
+            self._run_backtest(data)
             
             # 성과 지표 계산
-            metrics = self._calculate_metrics(df)
+            metrics = self._calculate_metrics()
             
-            return df, metrics
-            
+            return metrics
         except Exception as e:
-            logger.error(f"백테스트 실행 중 오류 발생: {e}")
+            logger.error(f"백테스트 실행 중 오류 발생: {str(e)}")
             raise
-    
-    def _simulate_trades(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        거래 시뮬레이션
-        
-        Args:
-            df (pd.DataFrame): OHLCV 데이터
-            
-        Returns:
-            pd.DataFrame: 시뮬레이션 결과
-        """
+
+    def _run_backtest(self, df: pd.DataFrame):
+        """백테스트 실행 로직"""
         try:
-            # 초기 설정
-            position = 0  # 0: 중립, 1: 롱, -1: 숏
-            entry_price = 0
-            stop_price = 0
-            pnl = 0
-            equity = self.initial_capital
+            # 포트폴리오 초기화
+            self.portfolio = {
+                'cash': self.initial_capital,
+                'position': 0,
+                'entry_price': 0,
+                'trades': []
+            }
             
-            # 결과 저장용 컬럼 추가
-            df['position'] = 0
-            df['stop_price'] = np.nan
-            df['stop_hit'] = False
-            df['stop_loss'] = False
-            df['pnl'] = 0.0
-            df['equity'] = self.initial_capital
+            # 일별 수익률 계산
+            self.daily_returns = pd.Series(index=df.index, dtype=float)
             
-            # 각 캔들에 대해 시뮬레이션
             for i in range(len(df)):
                 current_price = df['close'].iloc[i]
+                position = df['position'].iloc[i]
+                stop_hit = df['stop_hit'].iloc[i]
                 
                 # 포지션 진입
-                if df['position'].iloc[i] == 1 and position <= 0:
-                    position = 1
-                    entry_price = current_price
-                    stop_price = self._calculate_stop_price(df, i, position)
-                    df.loc[df.index[i], 'stop_price'] = stop_price
-                    
+                if position == 1 and self.portfolio['position'] == 0:
+                    self._enter_position(current_price)
+                
                 # 포지션 청산
-                elif df['position'].iloc[i] == 0 and position != 0:
-                    # 손익 계산
-                    if position == 1:
-                        pnl = (current_price - entry_price) * self.position_size
-                    else:
-                        pnl = (entry_price - current_price) * self.position_size
-                        
-                    equity += pnl
-                    df.loc[df.index[i], 'pnl'] = pnl
-                    df.loc[df.index[i], 'equity'] = equity
-                    
-                    position = 0
-                    entry_price = 0
-                    stop_price = 0
-                    
-                # 스탑로스 체크
-                if position != 0 and stop_price > 0:
-                    if (position == 1 and current_price <= stop_price) or \
-                       (position == -1 and current_price >= stop_price):
-                        df.loc[df.index[i], 'stop_hit'] = True
-                        df.loc[df.index[i], 'stop_loss'] = True
-                        
-                        # 손익 계산
-                        if position == 1:
-                            pnl = (stop_price - entry_price) * self.position_size
-                        else:
-                            pnl = (entry_price - stop_price) * self.position_size
-                            
-                        equity += pnl
-                        df.loc[df.index[i], 'pnl'] = pnl
-                        df.loc[df.index[i], 'equity'] = equity
-                        
-                        position = 0
-                        entry_price = 0
-                        stop_price = 0
-            
-            return df
-            
+                elif (position == 0 or stop_hit) and self.portfolio['position'] != 0:
+                    self._exit_position(current_price)
+                
+                # 일별 수익률 계산
+                if self.portfolio['position'] != 0:
+                    self.daily_returns.iloc[i] = (current_price - self.portfolio['entry_price']) / self.portfolio['entry_price']
+                else:
+                    self.daily_returns.iloc[i] = 0
         except Exception as e:
-            logger.error(f"거래 시뮬레이션 중 오류 발생: {e}")
+            logger.error(f"백테스트 실행 중 오류 발생: {str(e)}")
             raise
-    
-    def _calculate_metrics(self, df: pd.DataFrame) -> Dict[str, float]:
-        """
-        성과 지표 계산
-        
-        Args:
-            df (pd.DataFrame): 거래 결과가 포함된 데이터
-            
-        Returns:
-            Dict[str, float]: 성과 지표
-        """
+
+    def _calculate_metrics(self) -> dict:
+        """성과 지표 계산"""
         try:
-            # 수익률 계산
-            total_return = (df['equity'].iloc[-1] / self.initial_capital - 1) * 100
+            # 총 수익률
+            total_return = (self.portfolio['cash'] - self.initial_capital) / self.initial_capital
             
             # 연간 수익률 (CAGR)
-            days = (df.index[-1] - df.index[0]).days
-            cagr = ((1 + total_return/100) ** (365/days) - 1) * 100
-            
-            # 일간 수익률
-            daily_returns = df['equity'].pct_change().dropna()
+            days = (self.daily_returns.index[-1] - self.daily_returns.index[0]).days
+            cagr = (1 + total_return) ** (365 / days) - 1 if days > 0 else 0
             
             # 샤프 비율
-            risk_free_rate = 0.02  # 연 2% 무위험 수익률 가정
-            excess_returns = daily_returns - risk_free_rate/252
-            sharpe = np.sqrt(252) * excess_returns.mean() / excess_returns.std()
+            excess_returns = self.daily_returns - 0.02/252  # 무위험 수익률 가정
+            sharpe = np.sqrt(252) * excess_returns.mean() / excess_returns.std() if excess_returns.std() != 0 else 0
             
             # 최대 낙폭
-            cumulative_returns = (1 + daily_returns).cumprod()
+            cumulative_returns = (1 + self.daily_returns).cumprod()
             rolling_max = cumulative_returns.expanding().max()
-            drawdowns = (cumulative_returns - rolling_max) / rolling_max
-            max_drawdown = drawdowns.min() * 100
+            drawdowns = cumulative_returns / rolling_max - 1
+            max_drawdown = drawdowns.min()
             
             # 승률
-            trades = df[df['position'] != df['position'].shift(1)]
-            winning_trades = trades[trades['pnl'] > 0]
-            win_rate = len(winning_trades) / len(trades) * 100 if len(trades) > 0 else 0
-            
-            # 평균 수익/손실
-            avg_win = winning_trades['pnl'].mean() if len(winning_trades) > 0 else 0
-            losing_trades = trades[trades['pnl'] < 0]
-            avg_loss = losing_trades['pnl'].mean() if len(losing_trades) > 0 else 0
+            trades = self.portfolio['trades']
+            if trades:
+                winning_trades = [t for t in trades if t['pnl'] > 0]
+                win_rate = len(winning_trades) / len(trades)
+                avg_win = np.mean([t['pnl'] for t in winning_trades]) if winning_trades else 0
+                avg_loss = np.mean([t['pnl'] for t in trades if t['pnl'] <= 0]) if any(t['pnl'] <= 0 for t in trades) else 0
+            else:
+                win_rate = 0
+                avg_win = 0
+                avg_loss = 0
             
             return {
                 'total_return': total_return,
@@ -187,11 +131,10 @@ class Backtester:
                 'avg_loss': avg_loss,
                 'trade_count': len(trades)
             }
-            
         except Exception as e:
-            logger.error(f"성과 지표 계산 중 오류 발생: {e}")
+            logger.error(f"성과 지표 계산 중 오류 발생: {str(e)}")
             raise
-    
+
     def print_results(self, metrics: Dict[str, float]):
         """
         백테스트 결과 출력
@@ -288,7 +231,7 @@ if __name__ == "__main__":
     
     # 백테스트 실행
     bt = Backtester()
-    df, metrics = bt.run(data)
+    metrics = bt.run(data)
     bt.print_results(metrics)
     
     # Walk-forward 테스트 실행

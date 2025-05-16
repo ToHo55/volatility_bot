@@ -170,215 +170,101 @@ class DataSource:
             return pd.DataFrame()
             
     def get_upbit_ohlcv(self, symbol: str, interval: str, count: int) -> pd.DataFrame:
-        """
-        Upbit OHLCV 데이터 조회
-        
-        Args:
-            symbol (str): 심볼 (예: BTC-KRW)
-            interval (str): 시간 간격 (1m, 3m, 5m, 15m, 30m, 1h, 4h, 1d, 1w, 1M)
-            count (int): 조회할 캔들 개수
-            
-        Returns:
-            pd.DataFrame: OHLCV 데이터
-        """
+        """Upbit OHLCV 데이터 조회"""
         try:
-            # API 엔드포인트
-            url = f"https://api.upbit.com/v1/candles/{interval}"
+            # API 엔드포인트 설정
+            url = "https://api.upbit.com/v1/candles/minutes/60"
+            if interval == "1d":
+                url = "https://api.upbit.com/v1/candles/days"
+            elif interval == "1w":
+                url = "https://api.upbit.com/v1/candles/weeks"
+            elif interval == "1M":
+                url = "https://api.upbit.com/v1/candles/months"
             
             # 파라미터 설정
             params = {
-                'market': symbol,
-                'count': min(count, 200)  # 최대 200개로 제한
+                "market": symbol,
+                "count": count
             }
             
             # API 요청
             response = self._make_request(url, params)
-            
-            # 데이터 변환
             data = response.json()
-            if not data:
-                logger.warning(f"데이터가 비어있습니다: {symbol}")
-                return pd.DataFrame()
-                
-            df = pd.DataFrame(data)
             
-            # 컬럼명 변경
+            # 데이터프레임 변환
+            df = pd.DataFrame(data)
             df = df.rename(columns={
-                'opening_price': 'open',
-                'high_price': 'high',
-                'low_price': 'low',
-                'trade_price': 'close',
-                'candle_acc_trade_volume': 'volume'
+                "opening_price": "open",
+                "high_price": "high",
+                "low_price": "low",
+                "trade_price": "close",
+                "candle_acc_trade_volume": "volume",
+                "candle_date_time_kst": "timestamp"
             })
             
             # 인덱스 설정
-            df['timestamp'] = pd.to_datetime(df['candle_date_time_kst'])
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
             df.set_index('timestamp', inplace=True)
+            df.sort_index(inplace=True)
             
-            # 필요한 컬럼만 선택
-            df = df[['open', 'high', 'low', 'close', 'volume']]
-            
-            # 데이터 정렬
-            df = df.sort_index()
-            
-            return df
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Upbit API 요청 실패: {e}")
-            raise
-        except ValueError as e:
-            logger.error(f"데이터 변환 실패: {e}")
-            raise
+            return df[['open', 'high', 'low', 'close', 'volume']]
         except Exception as e:
-            logger.error(f"Upbit 데이터 조회 실패: {e}")
-            raise
+            self.logger.error(f"Upbit API 요청 실패: {str(e)}")
+            return None
     
-    def save_to_cache(self, df: pd.DataFrame, symbol: str, interval: str, cache_path: str, date: str = None):
-        """
-        데이터를 캐시에 저장
-        
-        Args:
-            df (pd.DataFrame): 저장할 데이터
-            symbol (str): 심볼
-            interval (str): 시간 간격
-            cache_path (str): 캐시 파일 경로
-            date (str, optional): 날짜 (기본값: 현재 날짜)
-        """
+    def save_to_cache(self, df: pd.DataFrame, symbol: str, interval: str, cache_path: str):
+        """데이터 캐시 저장"""
         try:
-            if date is None:
-                date = datetime.now().strftime('%Y%m%d')
-                
-            # 캐시 파일 경로 생성
-            cache_file = os.path.join(cache_path, f"{symbol}_{interval}_{date}.csv")
-            
-            # 디렉토리 생성
-            os.makedirs(os.path.dirname(cache_file), exist_ok=True)
-            
-            # 데이터 저장
-            df.to_csv(cache_file)
-            
+            os.makedirs(cache_path, exist_ok=True)
+            file_path = os.path.join(cache_path, f"{symbol}_{interval}.csv")
+            df.to_csv(file_path, encoding='utf-8')
         except Exception as e:
-            logger.error(f"캐시 저장 실패: {e}")
-            raise
+            self.logger.error(f"캐시 저장 중 오류 발생: {str(e)}")
     
-    def load_from_cache(self, exchange: str, ticker: str, 
-                       interval: str, date: str) -> pd.DataFrame:
-        """
-        CSV 캐시에서 데이터 로드
-        
-        Args:
-            exchange (str): 거래소 이름
-            ticker (str): 코인 티커
-            interval (str): 시간 간격
-            date (str): 날짜 (YYYY-MM-DD)
-            
-        Returns:
-            pd.DataFrame: 캐시된 데이터
-        """
+    def load_from_cache(self, symbol: str, interval: str, cache_path: str, date: str = None) -> pd.DataFrame:
+        """데이터 캐시 로드"""
         try:
-            filename = f"{exchange}_{ticker}_{interval}_{date}.csv"
-            filepath = os.path.join(self.cache_dir, filename)
-            
-            if not os.path.exists(filepath):
-                logger.warning(f"캐시 파일이 존재하지 않습니다: {filepath}")
-                return pd.DataFrame()
-                
-            # 데이터 로드
-            df = pd.read_csv(filepath, index_col='timestamp', parse_dates=True)
-            
-            # 데이터 검증
-            required_columns = ['open', 'high', 'low', 'close', 'volume']
-            if not all(col in df.columns for col in required_columns):
-                logger.error(f"캐시 파일에 필수 컬럼이 누락되었습니다: {filepath}")
-                return pd.DataFrame()
-                
-            # 데이터 정렬
-            df = df.sort_index()
-            
-            logger.info(f"캐시에서 데이터 로드 완료: {filepath}")
-            return df
-            
-        except Exception as e:
-            logger.error(f"캐시 로드 실패: {e}")
-            return pd.DataFrame()
-    
-    def get_historical_data(self, symbol: str, interval: str, 
-                          start_date: Optional[str] = None, 
-                          end_date: Optional[str] = None) -> Optional[pd.DataFrame]:
-        """
-        과거 데이터 조회
-        
-        Args:
-            symbol (str): 거래 심볼
-            interval (str): 시간 간격 (1m, 5m, 15m, 30m, 1h, 4h, 1d, 1w, 1M)
-            start_date (str, optional): 시작 날짜 (YYYY-MM-DD)
-            end_date (str, optional): 종료 날짜 (YYYY-MM-DD)
-            
-        Returns:
-            Optional[pd.DataFrame]: OHLCV 데이터
-        """
-        try:
-            # 날짜 처리
-            if start_date is None:
-                if interval == "1d":
-                    start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
-                elif interval == "1h":
-                    start_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
-                else:
-                    start_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-                    
-            if end_date is None:
-                end_date = datetime.now().strftime("%Y-%m-%d")
-                
-            # 날짜 파싱
-            try:
-                start = datetime.strptime(start_date, "%Y-%m-%d")
-                end = datetime.strptime(end_date, "%Y-%m-%d")
-            except ValueError:
-                # 상대적 기간 처리 (예: "1d", "1w", "1mo")
-                if start_date.endswith("d"):
-                    days = int(start_date[:-1])
-                    start = datetime.now() - timedelta(days=days)
-                elif start_date.endswith("w"):
-                    weeks = int(start_date[:-1])
-                    start = datetime.now() - timedelta(weeks=weeks)
-                elif start_date.endswith("mo"):
-                    months = int(start_date[:-2])
-                    start = datetime.now() - timedelta(days=months*30)
-                else:
-                    raise ValueError(f"잘못된 날짜 형식: {start_date}")
-                    
-                end = datetime.now()
-                
-            # 데이터 조회
-            days_diff = (end - start).days
-            if days_diff > 200:  # 200일 이상인 경우 분할 조회
-                dfs = []
-                current_start = start
-                while current_start < end:
-                    current_end = min(current_start + timedelta(days=200), end)
-                    df_chunk = self.get_upbit_ohlcv(symbol, interval, 200)
-                    if df_chunk is not None and not df_chunk.empty:
-                        dfs.append(df_chunk)
-                    current_start = current_end
-                df = pd.concat(dfs) if dfs else pd.DataFrame()
-            else:
-                df = self.get_upbit_ohlcv(symbol, interval, days_diff + 1)
-            
-            if df is None or len(df) == 0:
-                logger.error(f"데이터 조회 실패: {symbol}")
+            file_path = os.path.join(cache_path, f"{symbol}_{interval}.csv")
+            if not os.path.exists(file_path):
                 return None
-                
-            # 날짜 필터링
-            df = df[(df.index >= start) & (df.index <= end)]
             
-            # 중복 제거
-            df = df[~df.index.duplicated(keep='first')]
+            df = pd.read_csv(file_path, index_col=0, parse_dates=True, encoding='utf-8')
+            
+            if date:
+                df = df[df.index.date == pd.to_datetime(date).date()]
             
             return df
-            
         except Exception as e:
-            logger.error(f"과거 데이터 조회 중 오류 발생: {e}")
+            self.logger.error(f"캐시 로드 중 오류 발생: {str(e)}")
+            return None
+    
+    def get_historical_data(self, symbol: str, interval: str, period: str) -> pd.DataFrame:
+        """과거 데이터 조회"""
+        try:
+            # 기간 설정
+            if period == "1d":
+                count = 1
+            elif period == "1w":
+                count = 7
+            elif period == "1mo":
+                count = 31
+            elif period == "3mo":
+                count = 93
+            elif period == "6mo":
+                count = 186
+            elif period == "1y":
+                count = 365
+            else:
+                raise ValueError(f"지원하지 않는 기간입니다: {period}")
+            
+            # 데이터 조회
+            df = self.get_upbit_ohlcv(symbol, interval, count)
+            if df is None:
+                return None
+            
+            return df
+        except Exception as e:
+            self.logger.error(f"과거 데이터 조회 중 오류 발생: {str(e)}")
             return None
 
 if __name__ == "__main__":
