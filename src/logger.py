@@ -112,49 +112,33 @@ class Logger:
         logger.info("Shutting down trading bot")
     
     def print_error(self, error: Exception):
-        """
-        에러 메시지 출력
+        """에러 메시지 출력"""
+        error_msg = f"에러 발생: {str(error)}"
+        print(error_msg)
         
-        Args:
-            error (Exception): 발생한 에러
-        """
-        try:
-            error_type = type(error).__name__
-            error_msg = str(error)
-            
-            # 콘솔 출력
-            self.console.print(f"[red]에러 발생: {error_msg}[/red]")
-            
-            # 로그 파일 기록
-            self.logger.error(f"{error_type}: {error_msg}")
-            
-        except Exception as e:
-            self.logger.error(f"에러 메시지 출력 중 추가 오류 발생: {e}")
+        # 에러 로그 파일에 기록
+        with open(os.path.join(self.log_dir, "error.log"), "a", encoding='utf-8') as f:
+            f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {error_msg}\n")
+        
+        # 로거에도 기록
+        self.logger.error(str(error))
     
     def print_trade(self, trade_info: dict):
-        """
-        거래 정보 출력
+        """거래 정보 출력"""
+        trade_msg = (
+            f"거래 실행: {trade_info['symbol']} | "
+            f"방향: {trade_info['side']} | "
+            f"수량: {trade_info['quantity']} | "
+            f"가격: {trade_info['price']}"
+        )
+        print(trade_msg)
         
-        Args:
-            trade_info (dict): 거래 정보
-        """
-        try:
-            # 거래 정보 포맷팅
-            trade_info_str = (
-                f"거래 실행: {trade_info['symbol']} | "
-                f"방향: {trade_info['side']} | "
-                f"수량: {trade_info['quantity']} | "
-                f"가격: {trade_info['price']}"
-            )
-            
-            # 콘솔 출력
-            self.console.print(f"[blue]{trade_info_str}[/blue]")
-            
-            # 로그 파일 기록
-            self.logger.info(trade_info_str)
-            
-        except Exception as e:
-            self.logger.error(f"거래 정보 출력 중 오류 발생: {e}")
+        # 거래 로그 파일에 기록
+        with open(os.path.join(self.log_dir, "trading.log"), "a", encoding='utf-8') as f:
+            f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {trade_msg}\n")
+        
+        # 로거에도 기록
+        self.logger.info(trade_msg)
     
     def print_position(self, position_info: dict):
         """

@@ -60,46 +60,27 @@ class TechnicalIndicators:
             logger.error(f"RSI 계산 중 오류 발생: {e}")
             raise
 
-    def calc_ema(self, series: pd.Series, period: int) -> pd.Series:
-        """
-        EMA(Exponential Moving Average) 계산
-        
-        Args:
-            series (pd.Series): 가격 데이터
-            period (int): 기간
-            
-        Returns:
-            pd.Series: EMA 값
-        """
-        if period <= 0:
-            raise ValueError("EMA 기간은 0보다 커야 합니다.")
-            
-        if series is None or len(series) == 0:
-            raise ValueError("가격 데이터가 비어있습니다.")
-            
+    def calc_ema(self, data: pd.Series, period: int) -> pd.Series:
+        """지수이동평균(EMA) 계산"""
         try:
-            # EMA 계산
-            multiplier = 2 / (period + 1)
-            ema = pd.Series(index=series.index, dtype=float)
+            # 데이터가 충분한지 확인
+            if len(data) < period:
+                return pd.Series([np.nan] * len(data), index=data.index)
             
-            # 첫 번째 EMA는 SMA로 계산
-            ema.iloc[period-1] = series.iloc[:period].mean()
+            # EMA 계산
+            ema = pd.Series(index=data.index, dtype=float)
+            ema.iloc[period-1] = data.iloc[:period].mean()  # 초기값 설정
             
             # 나머지 기간에 대해 EMA 계산
-            for i in range(period, len(series)):
-                ema.iloc[i] = (series.iloc[i] - ema.iloc[i-1]) * multiplier + ema.iloc[i-1]
-                
-            # 초기값을 NaN으로 설정
-            ema.iloc[:period-1] = np.nan
-            
-            # 컬럼 이름 설정
-            ema.name = f'ema{period}'
+            for i in range(period, len(data)):
+                ema.iloc[i] = (data.iloc[i] * (2 / (period + 1))) + \
+                            (ema.iloc[i-1] * (1 - 2 / (period + 1)))
             
             return ema
             
         except Exception as e:
-            logger.error(f"EMA 계산 중 오류 발생: {e}")
-            raise
+            logger.error(f"EMA 계산 중 오류 발생: {str(e)}")
+            return pd.Series([np.nan] * len(data), index=data.index)
 
     def ema_slope(self, series: pd.Series, period: int = 5) -> pd.Series:
         """
