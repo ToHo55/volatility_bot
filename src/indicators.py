@@ -27,7 +27,9 @@ class TechnicalIndicators:
             
         if len(series) < period + 1:
             # 데이터가 부족한 경우 NaN으로 채움
-            return pd.Series([np.nan] * len(series), index=series.index)
+            rsi = pd.Series([np.nan] * len(series), index=series.index)
+            rsi.name = 'rsi'
+            return rsi
             
         try:
             # 가격 변화 계산
@@ -53,6 +55,9 @@ class TechnicalIndicators:
             # 0-100 사이로 클리핑
             rsi = rsi.clip(0, 100)
             
+            # 이름 설정
+            rsi.name = 'rsi'
+            
             return rsi
             
         except Exception as e:
@@ -64,7 +69,9 @@ class TechnicalIndicators:
         try:
             # 데이터가 충분한지 확인
             if len(data) < period:
-                return pd.Series([np.nan] * len(data), index=data.index)
+                ema = pd.Series([np.nan] * len(data), index=data.index)
+                ema.name = f'ema{period}'
+                return ema
             
             # EMA 계산
             ema = pd.Series(index=data.index, dtype=float)
@@ -75,11 +82,16 @@ class TechnicalIndicators:
                 ema.iloc[i] = (data.iloc[i] * (2 / (period + 1))) + \
                             (ema.iloc[i-1] * (1 - 2 / (period + 1)))
             
+            # 이름 설정
+            ema.name = f'ema{period}'
+            
             return ema
             
         except Exception as e:
             logger.error(f"EMA 계산 중 오류 발생: {str(e)}")
-            return pd.Series([np.nan] * len(data), index=data.index)
+            ema = pd.Series([np.nan] * len(data), index=data.index)
+            ema.name = f'ema{period}'
+            return ema
 
     def ema_slope(self, series: pd.Series, period: int = 5) -> pd.Series:
         """
@@ -161,18 +173,21 @@ class TechnicalIndicators:
             raise ValueError(f"필수 컬럼이 누락되었습니다: {required_columns}")
             
         try:
+            # 데이터프레임 복사
+            df = df.copy()
+            
             # RSI
-            df['rsi'] = self.calc_rsi(df['close'])
+            df.loc[:, 'rsi'] = self.calc_rsi(df['close'])
             
             # EMA
-            df['ema5'] = self.calc_ema(df['close'], 5)
-            df['ema20'] = self.calc_ema(df['close'], 20)
+            df.loc[:, 'ema5'] = self.calc_ema(df['close'], 5)
+            df.loc[:, 'ema20'] = self.calc_ema(df['close'], 20)
             
             # EMA 기울기
-            df['ema5_slope'] = self.ema_slope(df['close'], 5)
+            df.loc[:, 'ema5_slope'] = self.ema_slope(df['close'], 5)
             
             # ATR
-            df['atr'] = self.calc_atr(df['high'], df['low'], df['close'])
+            df.loc[:, 'atr'] = self.calc_atr(df['high'], df['low'], df['close'])
             
             return df
         except Exception as e:

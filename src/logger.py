@@ -141,36 +141,29 @@ class Logger:
         self.logger.info(trade_msg)
     
     def print_position(self, position_info: dict):
-        """
-        포지션 정보 출력
+        """포지션 정보 출력"""
+        position_msg = (
+            f"포지션 상태: {position_info}"
+        )
+        print(position_msg)
         
-        Args:
-            position_info (dict): 포지션 정보
-        """
-        table = Table(title="포지션 상태")
-        table.add_column("항목", style="cyan")
-        table.add_column("값", style="magenta")
+        # 거래 로그 파일에 기록
+        with open(os.path.join(self.log_dir, "trading.log"), "a", encoding='utf-8') as f:
+            f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {position_msg}\n")
         
-        for key, value in position_info.items():
-            table.add_row(str(key), str(value))
-        
-        self.console.print(table)
-        logger.info(f"포지션 상태: {position_info}")
+        # 로거에도 기록
+        self.logger.info(position_msg)
     
     def print_progress(self, message: str):
-        """
-        진행 상태 출력
+        """진행 상황 출력"""
+        print(message)
         
-        Args:
-            message (str): 진행 메시지
-        """
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=self.console
-        ) as progress:
-            progress.add_task(description=message, total=None)
-            logger.info(message)
+        # 거래 로그 파일에 기록
+        with open(os.path.join(self.log_dir, "trading.log"), "a", encoding='utf-8') as f:
+            f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {message}\n")
+        
+        # 로거에도 기록
+        self.logger.info(message)
 
 if __name__ == "__main__":
     # 테스트 코드
