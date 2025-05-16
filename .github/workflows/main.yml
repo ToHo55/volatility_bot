@@ -46,7 +46,9 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip wheel
-          pip install "numpy>=1.24.0" "pandas>=2.0.0"
+          
+          # NumPy와 Pandas 버전 고정
+          pip install "numpy==1.24.3" "pandas==2.0.3"
           
           # TA-Lib 설치 (빌드 격리 비활성화)
           pip install --no-build-isolation ta-lib==0.4.28
