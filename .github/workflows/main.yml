@@ -15,7 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.11'
           cache: 'pip'
       
       - name: Build TA-Lib C library
@@ -46,8 +46,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip wheel
-          # NumPy 1.24 이하 고정
-          pip install "numpy<1.24" pandas==1.5.3
+          pip install "numpy>=1.24.0" "pandas>=2.0.0"
           
           # TA-Lib 설치 (빌드 격리 비활성화)
           pip install --no-build-isolation ta-lib==0.4.28
@@ -56,7 +55,7 @@ jobs:
           pip install pytest==7.4.0 pytest-cov==4.1.0 pytest-mock==3.11.1 pluggy>=1.0.0
           
           # 누락된 의존성 패키지 설치
-          pip install PyJWT pygments urllib3 certifi charset-normalizer idna markdown-it-py python-dateutil pytz websockets
+          pip install PyJWT==2.8.0 pygments==2.17.2 urllib3==2.1.0 certifi==2023.11.17 charset-normalizer==3.3.2 idna==3.6 markdown-it-py==3.0.0 python-dateutil==2.8.2 pytz==2023.3 websockets==12.0
           
           # 나머지 패키지
           pip install --no-deps -r requirements.txt
@@ -65,12 +64,13 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: |
-          pytest tests/ --cov=src/ --cov-report=xml
+          pytest tests/ --cov=src/ --cov-report=xml -v --tb=short
       
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
+          fail_ci_if_error: true
 
   build-and-push:
     needs: test
