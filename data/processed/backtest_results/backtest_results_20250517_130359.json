@@ -1,0 +1,35 @@
+{
+  "timestamp": "20250517_130359",
+  "strategies": {
+    "mean_revert": {
+      "trades": [],
+      "metrics": {
+        "total_trades": 0,
+        "win_rate": 0,
+        "total_pnl": 0,
+        "max_drawdown": 0,
+        "sharpe_ratio": 0
+      }
+    },
+    "ml_boost": {
+      "trades": [
+        {
+          "entry_time": "2023-04-26 18:00:00",
+          "exit_time": "2023-04-27 04:00:00",
+          "entry_price": 171644018.16391757,
+          "exit_price": 169966991.72881392,
+          "position": -1,
+          "pnl": 1554.0750129749567,
+          "holding_period": 10.0
+        }
+      ],
+      "metrics": {
+        "total_trades": 1,
+        "win_rate": 100.0,
+        "total_pnl": 1554.0750129749567,
+        "max_drawdown": 0,
+        "sharpe_ratio": 0
+      }
+    }
+  }
+}

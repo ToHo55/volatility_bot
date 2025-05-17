@@ -1,0 +1,234 @@
+{
+  "timestamp": "20250517_130849",
+  "strategies": {
+    "mean_revert": {
+      "trades": [
+        {
+          "entry_time": "2023-03-02 14:00:00",
+          "exit_time": "2023-03-04 01:00:00",
+          "entry_price": 158850244.6928386,
+          "exit_price": 158501444.23643655,
+          "position": -1,
+          "pnl": 39.156335045655965,
+          "holding_period": 35.0
+        },
+        {
+          "entry_time": "2023-03-13 01:00:00",
+          "exit_time": "2023-03-14 10:00:00",
+          "entry_price": 164697441.72478712,
+          "exit_price": 165563704.88767624,
+          "position": -1,
+          "pnl": -1452.4068604454733,
+          "holding_period": 33.0
+        },
+        {
+          "entry_time": "2023-03-26 09:00:00",
+          "exit_time": "2023-03-26 20:00:00",
+          "entry_price": 163177657.9135369,
+          "exit_price": 165732969.93893918,
+          "position": 1,
+          "pnl": 2730.0179345793704,
+          "holding_period": 11.0
+        },
+        {
+          "entry_time": "2023-04-23 17:00:00",
+          "exit_time": "2023-04-26 14:00:00",
+          "entry_price": 168997172.77963707,
+          "exit_price": 171934178.77470723,
+          "position": -1,
+          "pnl": -3884.5526793261192,
+          "holding_period": 69.0
+        },
+        {
+          "entry_time": "2023-05-01 01:00:00",
+          "exit_time": "2023-05-02 12:00:00",
+          "entry_price": 167099575.59615058,
+          "exit_price": 167258198.32700783,
+          "position": 1,
+          "pnl": -210.3295983254794,
+          "holding_period": 35.0
+        },
+        {
+          "entry_time": "2023-05-09 05:00:00",
+          "exit_time": "2023-05-09 19:00:00",
+          "entry_price": 165257367.93397883,
+          "exit_price": 164152806.02146688,
+          "position": -1,
+          "pnl": 935.7376439707139,
+          "holding_period": 14.0
+        },
+        {
+          "entry_time": "2023-05-12 09:00:00",
+          "exit_time": "2023-05-13 22:00:00",
+          "entry_price": 162587642.8485478,
+          "exit_price": 160125824.70538625,
+          "position": 1,
+          "pnl": -3429.9853861855763,
+          "holding_period": 37.0
+        },
+        {
+          "entry_time": "2023-06-03 16:00:00",
+          "exit_time": "2023-06-04 18:00:00",
+          "entry_price": 169953564.068864,
+          "exit_price": 171022468.89759904,
+          "position": -1,
+          "pnl": -1654.7687531519662,
+          "holding_period": 26.0
+        },
+        {
+          "entry_time": "2023-06-24 23:00:00",
+          "exit_time": "2023-06-27 03:00:00",
+          "entry_price": 156945344.9603568,
+          "exit_price": 154882222.1408859,
+          "position": 1,
+          "pnl": -3019.298189726108,
+          "holding_period": 52.0
+        },
+        {
+          "entry_time": "2023-08-05 23:00:00",
+          "exit_time": "2023-08-06 12:00:00",
+          "entry_price": 147496999.3899962,
+          "exit_price": 147202792.40399414,
+          "position": -1,
+          "pnl": -3.598956859787336,
+          "holding_period": 13.0
+        },
+        {
+          "entry_time": "2023-11-02 13:00:00",
+          "exit_time": "2023-11-03 04:00:00",
+          "entry_price": 126903725.12107776,
+          "exit_price": 125706669.48445974,
+          "position": -1,
+          "pnl": 1475.3320602941658,
+          "holding_period": 15.0
+        },
+        {
+          "entry_time": "2023-11-22 03:00:00",
+          "exit_time": "2023-11-23 02:00:00",
+          "entry_price": 125058262.51300876,
+          "exit_price": 125856811.78514072,
+          "position": 1,
+          "pnl": 871.8798586615997,
+          "holding_period": 23.0
+        },
+        {
+          "entry_time": "2023-12-01 11:00:00",
+          "exit_time": "2023-12-03 08:00:00",
+          "entry_price": 129455989.67750782,
+          "exit_price": 129029934.52880482,
+          "position": 1,
+          "pnl": -1056.3790448347952,
+          "holding_period": 45.0
+        },
+        {
+          "entry_time": "2024-01-19 04:00:00",
+          "exit_time": "2024-01-23 20:00:00",
+          "entry_price": 138081473.9743574,
+          "exit_price": 133935073.1582146,
+          "position": 1,
+          "pnl": -6384.955817172953,
+          "holding_period": 112.0
+        },
+        {
+          "entry_time": "2024-01-26 05:00:00",
+          "exit_time": "2024-01-26 17:00:00",
+          "entry_price": 134855836.91652295,
+          "exit_price": 134277478.55715105,
+          "position": -1,
+          "pnl": 449.64250496066586,
+          "holding_period": 12.0
+        },
+        {
+          "entry_time": "2024-02-01 20:00:00",
+          "exit_time": "2024-02-03 10:00:00",
+          "entry_price": 136009021.49806187,
+          "exit_price": 135319517.99809098,
+          "position": -1,
+          "pnl": 605.1944326062095,
+          "holding_period": 38.0
+        },
+        {
+          "entry_time": "2024-03-15 18:00:00",
+          "exit_time": "2024-03-16 05:00:00",
+          "entry_price": 128472660.2629159,
+          "exit_price": 128642250.43995547,
+          "position": 1,
+          "pnl": -137.9938992423937,
+          "holding_period": 11.0
+        },
+        {
+          "entry_time": "2024-03-24 19:00:00",
+          "exit_time": "2024-03-25 22:00:00",
+          "entry_price": 125920752.85154274,
+          "exit_price": 125778028.6148077,
+          "position": -1,
+          "pnl": -174.97203753029305,
+          "holding_period": 27.0
+        },
+        {
+          "entry_time": "2024-07-17 22:00:00",
+          "exit_time": "2024-07-19 03:00:00",
+          "entry_price": 131594364.29286356,
+          "exit_price": 130917028.55899069,
+          "position": -1,
+          "pnl": 622.1184001977176,
+          "holding_period": 29.0
+        },
+        {
+          "entry_time": "2024-09-15 21:00:00",
+          "exit_time": "2024-09-16 07:00:00",
+          "entry_price": 143646666.37141934,
+          "exit_price": 143480475.92395544,
+          "position": -1,
+          "pnl": -170.01905190803728,
+          "holding_period": 10.0
+        },
+        {
+          "entry_time": "2024-11-10 17:00:00",
+          "exit_time": "2024-11-11 10:00:00",
+          "entry_price": 144415185.03032097,
+          "exit_price": 145955851.9639771,
+          "position": 1,
+          "pnl": 1721.1810278138091,
+          "holding_period": 17.0
+        },
+        {
+          "entry_time": "2024-12-04 06:00:00",
+          "exit_time": "2024-12-05 00:00:00",
+          "entry_price": 147960220.52983528,
+          "exit_price": 148510004.27698818,
+          "position": 1,
+          "pnl": 340.3795446590491,
+          "holding_period": 18.0
+        }
+      ],
+      "metrics": {
+        "total_trades": 22,
+        "win_rate": 45.45454545454545,
+        "total_pnl": -11788.620531920025,
+        "max_drawdown": 1.6339403668420336,
+        "sharpe_ratio": -4.163993376909798
+      }
+    },
+    "ml_boost": {
+      "trades": [
+        {
+          "entry_time": "2023-04-26 18:00:00",
+          "exit_time": "2023-04-27 04:00:00",
+          "entry_price": 171644018.16391757,
+          "exit_price": 169966991.72881392,
+          "position": -1,
+          "pnl": 1554.0750129749567,
+          "holding_period": 10.0
+        }
+      ],
+      "metrics": {
+        "total_trades": 1,
+        "win_rate": 100.0,
+        "total_pnl": 1554.0750129749567,
+        "max_drawdown": 0,
+        "sharpe_ratio": 0
+      }
+    }
+  }
+}
