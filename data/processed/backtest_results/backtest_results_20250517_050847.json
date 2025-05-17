@@ -1,0 +1,259 @@
+{
+  "mean_revert": {
+    "statistics": {
+      "total_trades": 15,
+      "win_rate": 0.3333333333333333,
+      "total_pnl": -761774.0,
+      "max_drawdown": 1.719347,
+      "sharpe_ratio": 17.54285824517619
+    },
+    "trades": [
+      {
+        "entry_time": "2025-05-10 16:00:00",
+        "exit_time": "2025-05-10 18:00:00",
+        "entry_price": 144790000.0,
+        "exit_price": 144796000.0,
+        "position": -1,
+        "pnl": -6000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-11 09:00:00",
+        "exit_time": "2025-05-11 11:00:00",
+        "entry_price": 144758000.0,
+        "exit_price": 144394000.0,
+        "position": -1,
+        "pnl": 364000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-11 19:00:00",
+        "exit_time": "2025-05-11 21:00:00",
+        "entry_price": 145930000.0,
+        "exit_price": 146168000.0,
+        "position": -1,
+        "pnl": -238000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-11 22:00:00",
+        "exit_time": "2025-05-12 00:00:00",
+        "entry_price": 145440000.0,
+        "exit_price": 145800000.0,
+        "position": -1,
+        "pnl": -360000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-12 17:00:00",
+        "exit_time": "2025-05-12 19:00:00",
+        "entry_price": 146919000.0,
+        "exit_price": 146744000.0,
+        "position": -1,
+        "pnl": 175000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-12 20:00:00",
+        "exit_time": "2025-05-12 22:00:00",
+        "entry_price": 146111000.0,
+        "exit_price": 145859000.0,
+        "position": -1,
+        "pnl": 252000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-13 00:00:00",
+        "exit_time": "2025-05-13 02:00:00",
+        "entry_price": 144001000.0,
+        "exit_price": 144150000.0,
+        "position": 1,
+        "pnl": 149000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-13 03:00:00",
+        "exit_time": "2025-05-13 05:00:00",
+        "entry_price": 143600000.0,
+        "exit_price": 144850000.0,
+        "position": 1,
+        "pnl": 1250000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-13 19:00:00",
+        "exit_time": "2025-05-13 21:00:00",
+        "entry_price": 146168000.0,
+        "exit_price": 146298000.0,
+        "position": -1,
+        "pnl": -130000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-13 22:00:00",
+        "exit_time": "2025-05-14 00:00:00",
+        "entry_price": 146300000.0,
+        "exit_price": 146118000.0,
+        "position": -1,
+        "pnl": 182000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-14 18:00:00",
+        "exit_time": "2025-05-14 20:00:00",
+        "entry_price": 144744000.0,
+        "exit_price": 145641000.0,
+        "position": 1,
+        "pnl": 897000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-15 13:00:00",
+        "exit_time": "2025-05-15 15:00:00",
+        "entry_price": 144806000.0,
+        "exit_price": 144150000.0,
+        "position": 1,
+        "pnl": -656000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-15 16:00:00",
+        "exit_time": "2025-05-15 18:00:00",
+        "entry_price": 143817000.0,
+        "exit_price": 143995000.0,
+        "position": 1,
+        "pnl": 178000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-15 19:00:00",
+        "exit_time": "2025-05-15 21:00:00",
+        "entry_price": 144076000.0,
+        "exit_price": 145117000.0,
+        "position": 1,
+        "pnl": 1041000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-16 02:00:00",
+        "exit_time": "2025-05-16 04:00:00",
+        "entry_price": 146366000.0,
+        "exit_price": 145868000.0,
+        "position": -1,
+        "pnl": 498000.0,
+        "holding_period": 2.0
+      }
+    ]
+  },
+  "breakout_atr": {
+    "statistics": {
+      "total_trades": 10,
+      "win_rate": 0.1,
+      "total_pnl": -5139401.0,
+      "max_drawdown": 5.139401,
+      "sharpe_ratio": -9.342679831149182
+    },
+    "trades": [
+      {
+        "entry_time": "2025-05-10 16:00:00",
+        "exit_time": "2025-05-10 18:00:00",
+        "entry_price": 144790000.0,
+        "exit_price": 144796000.0,
+        "position": 1,
+        "pnl": 6000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-11 09:00:00",
+        "exit_time": "2025-05-11 11:00:00",
+        "entry_price": 144758000.0,
+        "exit_price": 144394000.0,
+        "position": 1,
+        "pnl": -364000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-11 19:00:00",
+        "exit_time": "2025-05-11 21:00:00",
+        "entry_price": 145930000.0,
+        "exit_price": 146168000.0,
+        "position": 1,
+        "pnl": 238000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-12 17:00:00",
+        "exit_time": "2025-05-12 19:00:00",
+        "entry_price": 146919000.0,
+        "exit_price": 146744000.0,
+        "position": 1,
+        "pnl": -175000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-13 00:00:00",
+        "exit_time": "2025-05-13 02:00:00",
+        "entry_price": 144001000.0,
+        "exit_price": 144150000.0,
+        "position": -1,
+        "pnl": -149000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-13 10:00:00",
+        "exit_time": "2025-05-13 12:00:00",
+        "entry_price": 144178000.0,
+        "exit_price": 143902000.0,
+        "position": -1,
+        "pnl": 276000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-13 14:00:00",
+        "exit_time": "2025-05-13 16:00:00",
+        "entry_price": 144768000.0,
+        "exit_price": 145272000.0,
+        "position": 1,
+        "pnl": 504000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-14 18:00:00",
+        "exit_time": "2025-05-14 20:00:00",
+        "entry_price": 144744000.0,
+        "exit_price": 145641000.0,
+        "position": -1,
+        "pnl": -897000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-15 21:00:00",
+        "exit_time": "2025-05-15 23:00:00",
+        "entry_price": 145117000.0,
+        "exit_price": 144529000.0,
+        "position": 1,
+        "pnl": -588000.0,
+        "holding_period": 2.0
+      },
+      {
+        "entry_time": "2025-05-16 01:00:00",
+        "exit_time": "2025-05-16 03:00:00",
+        "entry_price": 146344000.0,
+        "exit_price": 145256000.0,
+        "position": 1,
+        "pnl": -1088000.0,
+        "holding_period": 2.0
+      }
+    ]
+  },
+  "ml_boost": {
+    "statistics": {
+      "total_trades": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "max_drawdown": 0,
+      "sharpe_ratio": 0
+    },
+    "trades": []
+  }
+}

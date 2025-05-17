@@ -135,63 +135,46 @@ class DataSource:
                 
         raise requests.exceptions.RequestException(f"최대 재시도 횟수 초과. 마지막 오류: {last_error}")
     
-    def _validate_data(self, df: pd.DataFrame, symbol: str) -> pd.DataFrame:
-        """
-        데이터 검증 및 전처리
-        
-        Args:
-            df (pd.DataFrame): 검증할 데이터
-            symbol (str): 심볼
-            
-        Returns:
-            pd.DataFrame: 검증 및 전처리된 데이터
-        """
+    def _validate_data(self, df: pd.DataFrame, symbol: str, interval: str) -> pd.DataFrame:
+        """데이터 유효성 검증"""
         try:
-            if df is None or len(df) == 0:
-                logger.warning(f"데이터가 비어있습니다: {symbol}")
+            if df is None or df.empty:
+                self.logger.warning(f"빈 데이터프레임: {symbol}")
                 return pd.DataFrame()
-                
-            # 필수 컬럼 검증
-            required_columns = ['open', 'high', 'low', 'close', 'volume']
+            
+            # 필수 컬럼 확인
+            required_columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
             if not all(col in df.columns for col in required_columns):
-                missing_cols = [col for col in required_columns if col not in df.columns]
-                logger.error(f"필수 컬럼 누락: {missing_cols}")
+                self.logger.warning(f"필수 컬럼 누락: {symbol}")
                 return pd.DataFrame()
-                
-            # 데이터 타입 변환
-            for col in required_columns:
-                df[col] = pd.to_numeric(df[col], errors='coerce')
-                
-            # 결측치 처리
-            if df.isnull().any().any():
-                logger.warning(f"결측치 발견: {symbol}")
-                df = df.fillna(method='ffill')  # 이전 값으로 채우기
-                
-            # 이상치 처리
-            for col in ['open', 'high', 'low', 'close']:
-                # 0 이하 값 처리
-                df.loc[df[col] <= 0, col] = np.nan
-                
-                # Z-score 기반 이상치 처리
-                z_scores = np.abs((df[col] - df[col].mean()) / df[col].std())
-                df.loc[z_scores > 3, col] = np.nan
-                
-            # 결측치가 있는 행 제거
-            df = df.dropna()
             
             # 가격 일관성 검증
-            invalid_rows = (df['high'] < df['low']) | (df['open'] > df['high']) | (df['open'] < df['low']) | (df['close'] > df['high']) | (df['close'] < df['low'])
+            invalid_rows = (
+                (df['high'] < df['low']) |
+                (df['open'] > df['high']) |
+                (df['open'] < df['low']) |
+                (df['close'] > df['high']) |
+                (df['close'] < df['low'])
+            )
             if invalid_rows.any():
-                logger.warning(f"가격 일관성 위반 행 발견: {symbol}")
+                self.logger.warning(f"가격 일관성 위반 행 발견: {symbol}")
                 df = df[~invalid_rows]
                 
             # 거래량 검증
             df.loc[df['volume'] < 0, 'volume'] = 0
             
+            # 시간 간격 검증
+            time_diff = df['timestamp'].diff()
+            expected_interval = pd.Timedelta(interval)
+            if not all(diff == expected_interval for diff in time_diff[1:]):
+                self.logger.warning(f"시간 간격 불일치 발견: {symbol}")
+                # 누락된 시간대 보간
+                df = df.set_index('timestamp').resample(interval).ffill().reset_index()
+            
             return df
             
         except Exception as e:
-            logger.error(f"데이터 검증 중 오류 발생: {e}")
+            self.logger.error(f"데이터 검증 중 오류 발생: {e}")
             return pd.DataFrame()
             
     def get_upbit_ohlcv(self, symbol: str, interval: str, count: int = 200) -> pd.DataFrame:
@@ -270,28 +253,57 @@ class DataSource:
     def save_to_cache(self, df: pd.DataFrame, symbol: str, interval: str, cache_path: str):
         """데이터 캐시 저장"""
         try:
+            if df is None or df.empty:
+                self.logger.warning("저장할 데이터가 없습니다.")
+                return
+                
             os.makedirs(cache_path, exist_ok=True)
             file_path = os.path.join(cache_path, f"{symbol}_{interval}.csv")
-            df.to_csv(file_path, encoding='utf-8')
+            
+            # 임시 파일에 먼저 저장
+            temp_path = file_path + '.tmp'
+            df.to_csv(temp_path, encoding='utf-8')
+            
+            # 임시 파일을 실제 파일로 이동
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            os.rename(temp_path, file_path)
+            
+            self.logger.info(f"캐시 저장 완료: {file_path}")
+            
         except Exception as e:
             self.logger.error(f"캐시 저장 중 오류 발생: {str(e)}")
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
     
     def load_from_cache(self, symbol: str, interval: str, cache_path: str, date: str = None) -> pd.DataFrame:
         """데이터 캐시 로드"""
         try:
             file_path = os.path.join(cache_path, f"{symbol}_{interval}.csv")
             if not os.path.exists(file_path):
-                raise FileNotFoundError(f"캐시 파일이 존재하지 않습니다: {file_path}")
+                self.logger.warning(f"캐시 파일이 존재하지 않습니다: {file_path}")
+                return pd.DataFrame()
             
+            # 파일 읽기
             df = pd.read_csv(file_path, index_col=0, parse_dates=True, encoding='utf-8')
             
-            if date:
-                df = df[df.index.date == pd.to_datetime(date).date()]
+            # 데이터 검증
+            df = self._validate_data(df, symbol, interval)
             
+            if date:
+                target_date = pd.to_datetime(date).date()
+                df = df[df.index.date == target_date]
+            
+            if df.empty:
+                self.logger.warning(f"캐시에서 데이터를 찾을 수 없습니다: {symbol} {interval}")
+                return pd.DataFrame()
+                
+            self.logger.info(f"캐시 로드 완료: {file_path}")
             return df
+            
         except Exception as e:
             self.logger.error(f"캐시 로드 중 오류 발생: {str(e)}")
-            raise
+            return pd.DataFrame()
     
     def get_historical_data(self, symbol: str, interval: str, period: str) -> pd.DataFrame:
         """과거 데이터 조회"""
@@ -317,7 +329,25 @@ class DataSource:
             if df is None:
                 raise ValueError("데이터 조회 실패: None 반환")
             
+            # 시간순 정렬
+            df = df.sort_values('timestamp')
+            
+            # 중복 데이터 제거
+            df = df.drop_duplicates(subset=['timestamp'])
+            
+            # 시간 역전 검사
+            if not df['timestamp'].is_monotonic_increasing:
+                self.logger.warning("시간 역전이 감지되었습니다. 데이터를 재정렬합니다.")
+                df = df.sort_values('timestamp')
+            
+            # 데이터 검증
+            df = self._validate_data(df, symbol, interval)
+            
+            # 캐시 저장
+            self.save_to_cache(df, symbol, interval, self.cache_dir)
+            
             return df
+            
         except Exception as e:
             self.logger.error(f"과거 데이터 조회 중 오류 발생: {str(e)}")
             raise
@@ -325,9 +355,5 @@ class DataSource:
 if __name__ == "__main__":
     # 테스트 코드
     ds = DataSource()
-    df = ds.get_historical_data("KRW-BTC", "1d")
-    if df is not None:
-        print(f"수집된 데이터 크기: {len(df)}")
-        print(df.head())
-    else:
-        print("데이터 로드 실패") 
+    df = ds.get_historical_data("KRW-BTC", "1h", "1y")
+    ds.save_to_cache(df, "KRW-BTC", "1h", "data/raw") 

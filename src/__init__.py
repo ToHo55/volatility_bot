@@ -2,16 +2,16 @@
 Volatility Trading Bot
 """
 
-from .strategies import MLBoostSignal, MeanRevertSignal, BreakoutATRSignal
-from .backtest import BacktestEngine
-from .executor import Executor
+from .backtest import BacktestResult
+from .strategies.mean_revert.signal import MeanRevertSignal
+from .strategies.breakout_atr.signal import BreakoutATRSignal
+from .strategies.ml_boost.signal import MLBoostSignal
 
 __all__ = [
-    'MLBoostSignal',
+    'BacktestResult',
     'MeanRevertSignal',
     'BreakoutATRSignal',
-    'BacktestEngine',
-    'Executor'
+    'MLBoostSignal'
 ]
 
 __version__ = '0.1.0' 

@@ -1,0 +1,32 @@
+{
+  "mean_revert": {
+    "statistics": {
+      "total_trades": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "max_drawdown": 0,
+      "sharpe_ratio": 0
+    },
+    "trades": []
+  },
+  "breakout_atr": {
+    "statistics": {
+      "total_trades": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "max_drawdown": 0,
+      "sharpe_ratio": 0
+    },
+    "trades": []
+  },
+  "ml_boost": {
+    "statistics": {
+      "total_trades": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "max_drawdown": 0,
+      "sharpe_ratio": 0
+    },
+    "trades": []
+  }
+}
