@@ -16,3 +16,4 @@ python-telegram-bot>=20.4
 cryptography>=41.0.3
 yfinance==0.2.36
 peewee>=3.15.0 
+urllib3>=2.6.0 # not directly required, pinned by Snyk to avoid a vulnerability
